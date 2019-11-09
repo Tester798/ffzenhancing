@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.0';
+    let version = '6.1';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -20,6 +20,7 @@
     let ffzenhancing_pin_mentions;
     let ffzenhancing_reset_after_delay;
     let ffzenhancing_reset_after_delay_delay;
+    let ffzenhancing_animate_static_gif_emotes_on_mouse_hover;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
     let timers = {};
@@ -354,6 +355,30 @@
             removeStyleFromSite('ffzenhancing_fix_tooltips');
         }
 
+        // ffzenhancing_animate_static_gif_emotes_on_mouse_hover
+        if (ffzenhancing_animate_static_gif_emotes_on_mouse_hover) {
+            if (!handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover']) {
+                handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover'] = e => {
+                    if (e.target.nodeName != 'IMG' && e.target.nodeName != 'BUTTON') return;
+                    if (!e.target.classList.contains('ffz-emote') && !e.target.classList.contains('emote-picker__emote-link')) return;
+                    let el = e.target.nodeName == 'BUTTON' ? e.target.querySelector('img') : e.target;
+                    if (!el.srcset || !el.srcset.startsWith('https://cache.ffzap.com/https://')) return;
+                    let proc = () => {
+                        el.srcset = el.srcset.replace(/https:\/\//g, 'https://cache.ffzap.com/https://');
+                        e.target.removeEventListener('mouseout', proc);
+                    };
+                    e.target.addEventListener('mouseout', proc);
+                    el.srcset = el.srcset.replace(/https:\/\/cache\.ffzap\.com\/https:\/\//g, 'https://');
+                };
+                document.body.addEventListener('mouseover', handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover']);
+            }
+        } else {
+            if (handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover']) {
+                document.body.removeEventListener('mouseover', handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover']);
+                delete handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover'];
+            }
+        }
+
         // ffzenhancing_pin_mentions
         if (handlers_already_attached['ffzenhancing_pin_mentions']) {
             handlers_already_attached['ffzenhancing_pin_mentions'].disconnect();
@@ -386,7 +411,7 @@
                                         let close_button = document.createElement('div');
                                         close_button.setAttribute('style', 'width: 14px; cursor: pointer; top: 5px; right: 5px; position: absolute;');
                                         close_button.innerHTML = '<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45" style="enable-background:new 0 0 45 45;" xml:space="preserve" version="1.1" id="svg2"><metadata id="metadata8"><rdf:RDF><cc:Work rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/></cc:Work></rdf:RDF></metadata><defs id="defs6"><clipPath id="clipPath16" clipPathUnits="userSpaceOnUse"><path id="path18" d="M 0,36 36,36 36,0 0,0 0,36 Z"/></clipPath></defs><g transform="matrix(1.25,0,0,-1.25,0,45)" id="g10"><g id="g12"><g clip-path="url(#clipPath16)" id="g14"><g transform="translate(21.5332,17.9976)" id="g20"><path id="path22" style="fill:#dd2e44;fill-opacity:1;fill-rule:nonzero;stroke:none" d="m 0,0 12.234,12.234 c 0.977,0.976 0.977,2.559 0,3.535 -0.976,0.977 -2.558,0.977 -3.535,0 L -3.535,3.535 -15.77,15.769 c -0.975,0.977 -2.559,0.977 -3.535,0 -0.976,-0.976 -0.976,-2.559 0,-3.535 L -7.07,0 -19.332,-12.262 c -0.977,-0.977 -0.977,-2.559 0,-3.535 0.488,-0.489 1.128,-0.733 1.768,-0.733 0.639,0 1.279,0.244 1.767,0.733 L -3.535,-3.535 8.699,-15.769 c 0.489,-0.488 1.128,-0.733 1.768,-0.733 0.639,0 1.279,0.245 1.767,0.733 0.977,0.976 0.977,2.558 0,3.535 L 0,0 Z"/></g></g></g></g></svg>';
-                                        close_button.addEventListener('click', (e) => {
+                                        close_button.addEventListener('click', e => {
                                             e.currentTarget.parentNode.remove();
                                             delete e.currentTarget.parentNode;
                                         });
@@ -425,7 +450,7 @@
     function setupHandlers() {
         if (!handlers_already_attached['ffzenhancing_focus_input_area_after_emote_select']) {
             handlers_already_attached['ffzenhancing_focus_input_area_after_emote_select'] = true;
-            document.body.addEventListener('click', (e) => {
+            document.body.addEventListener('click', e => {
                 if (ffzenhancing_focus_input_area_after_emote_select && e.target.classList.contains('emote-picker__emote-link')) {
                     setTimeout(() => {
                         let el = document.querySelector('.chat-input textarea');
@@ -446,7 +471,7 @@
         }
         if (!handlers_already_attached['ffzenhancing_doubleclick_username_paste_in_chat']) {
             handlers_already_attached['ffzenhancing_doubleclick_username_paste_in_chat'] = true;
-            document.body.addEventListener('click', (e) => {
+            document.body.addEventListener('click', e => {
                 if (!ffzenhancing_doubleclick_username_paste_in_chat) return;
                 if (ignore_next_event) {
                     ignore_next_event = false;
@@ -462,7 +487,7 @@
                     }, 400);
                 }
             }, true);
-            document.body.addEventListener('dblclick', (e) => {
+            document.body.addEventListener('dblclick', e => {
                 if (!ffzenhancing_doubleclick_username_paste_in_chat) return;
                 if (usernameElementClicked(e.target)) {
                     clearTimeout(timeoutShowCard);
@@ -506,7 +531,7 @@
                         description: 'Move focus to input area after emote select.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => ffzenhancing_focus_input_area_after_emote_select = val
+                    changed: val => ffzenhancing_focus_input_area_after_emote_select = val
                 });
                 this.settings.add('ffzenhancing.doubleclick_username_paste_in_chat', {
                     default: false,
@@ -516,7 +541,7 @@
                         description: 'Copy double-clicked username in chat to input field.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => ffzenhancing_doubleclick_username_paste_in_chat = val
+                    changed: val => ffzenhancing_doubleclick_username_paste_in_chat = val
                 });
 
 
@@ -529,7 +554,7 @@
                         description: 'Keep video delay low by increasing video playing speed.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_keep_delay_low = val;
                         schedulePeriodicCheckVideoInfo();
                     }
@@ -541,9 +566,9 @@
                         title: 'Maximum Video Delay',
                         description: 'Maximum video delay after which video speed will be increased.',
                         component: 'setting-text-box',
-                        process: (val) => parseFloat(val)
+                        process: val => parseFloat(val)
                     },
-                    changed: (val) => ffzenhancing_keep_delay_low_delay = val
+                    changed: val => ffzenhancing_keep_delay_low_delay = val
                 });
                 this.settings.add('ffzenhancing.keep_delay_low_delay_low_latency', {
                     default: 5,
@@ -552,9 +577,9 @@
                         title: 'Maximum Video Delay in Low Latency',
                         description: 'Maximum video delay in low latency mode after which video speed will be increased.',
                         component: 'setting-text-box',
-                        process: (val) => parseFloat(val)
+                        process: val => parseFloat(val)
                     },
-                    changed: (val) => ffzenhancing_keep_delay_low_delay_low_latency = val
+                    changed: val => ffzenhancing_keep_delay_low_delay_low_latency = val
                 });
                 this.settings.add('ffzenhancing.keep_delay_low_rate', {
                     default: 1.05,
@@ -563,7 +588,7 @@
                         title: 'Increased Video Playback Rate',
                         description: 'Video playback rate which will be set after Maximum Video Delay is reached.',
                         component: 'setting-text-box',
-                        process: (val) => {
+                        process: val => {
                             val = parseFloat(val);
                             if (isNaN(val) || !isFinite(val)) val = 1.05;
                             if (val < 1.01) val = 1.01;
@@ -571,7 +596,7 @@
                             return val;
                         }
                     },
-                    changed: (val) => ffzenhancing_keep_delay_low_rate = val
+                    changed: val => ffzenhancing_keep_delay_low_rate = val
                 });
                 this.settings.add('ffzenhancing.reset_after_delay', {
                     default: false,
@@ -581,7 +606,7 @@
                         description: 'Reset player if delay is too big.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_reset_after_delay = val;
                         schedulePeriodicCheckVideoInfo();
                     }
@@ -593,14 +618,14 @@
                         title: 'Reset Player After Delay Bigger Than',
                         description: 'Reset player if delay is bigger than value specified.',
                         component: 'setting-text-box',
-                        process: (val) => {
+                        process: val => {
                             val = parseFloat(val);
                             if (isNaN(val) || !isFinite(val)) val = 10;
                             if (val < 10) val = 10;
                             return val;
                         }
                     },
-                    changed: (val) => ffzenhancing_reset_after_delay_delay = val
+                    changed: val => ffzenhancing_reset_after_delay_delay = val
                 });
 
 
@@ -613,7 +638,7 @@
                         description: 'Move "Users in Chat" button from room header to bottom.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_move_users_in_chat_to_bottom = val;
                         processSettings();
                     }
@@ -626,7 +651,7 @@
                         description: 'Hide rooms header element to inscrease chat height.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_hide_rooms_header = val;
                         processSettings();
                     }
@@ -642,7 +667,7 @@
                         description: 'Hide Hanged FFZ Tooltips on Mouse Click.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_fix_tooltips = val;
                         processSettings();
                     }
@@ -655,8 +680,21 @@
                         description: 'Pin messages with mentions at the top of the chat.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_pin_mentions = val;
+                        processSettings();
+                    }
+                });
+                this.settings.add('ffzenhancing.animate_static_gif_emotes_on_mouse_hover', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Other Settings',
+                        title: 'Animate Static GIF Emotes On Mouse Hover',
+                        description: 'Enable animated GIF emotes when mouse hover over static emotes.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => {
+                        ffzenhancing_animate_static_gif_emotes_on_mouse_hover = val;
                         processSettings();
                     }
                 });
@@ -671,7 +709,7 @@
                         description: 'Reload player automatically when network error #2000 or #4000 happens.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_auto_reload_on_error_2000 = val;
                         error_2000_check();
                     }
@@ -684,7 +722,7 @@
                         description: 'Reload player automatically when video freezes.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_auto_reload_on_hanged_video = val;
                         playerFreezeCheck();
                     }
@@ -697,7 +735,7 @@
                         description: 'Reset player quality to default if different quality detected.',
                         component: 'setting-check-box',
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_auto_check_player_quality = val;
                         playerQualityCheck();
                     }
@@ -709,7 +747,7 @@
                         title: 'Auto Reload on Video Freeze After',
                         description: 'Delay before player reload when video freezes.',
                         component: 'setting-text-box',
-                        process: (val) => {
+                        process: val => {
                             val = parseFloat(val);
                             if (isNaN(val) || !isFinite(val)) val = 4;
                             if (val < 4) val = 4;
@@ -717,7 +755,7 @@
                             return val;
                         }
                     },
-                    changed: (val) => {
+                    changed: val => {
                         ffzenhancing_auto_reload_on_hanged_video_after = val;
                         playerFreezeCheck();
                     }
@@ -744,6 +782,7 @@
                 ffzenhancing_pin_mentions = this.settings.get('ffzenhancing.pin_mentions');
                 ffzenhancing_reset_after_delay = this.settings.get('ffzenhancing.reset_after_delay');
                 ffzenhancing_reset_after_delay_delay = this.settings.get('ffzenhancing.reset_after_delay_delay');
+                ffzenhancing_animate_static_gif_emotes_on_mouse_hover = this.settings.get('ffzenhancing.animate_static_gif_emotes_on_mouse_hover');
                 schedulePeriodicCheckVideoInfo();
                 setupHandlers();
                 error_2000_check();
