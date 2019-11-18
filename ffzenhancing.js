@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.1';
+    let version = '6.2';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -8,6 +8,7 @@
     let ffzenhancing_keep_delay_low_delay;
     let ffzenhancing_keep_delay_low_delay_low_latency;
     let ffzenhancing_keep_delay_low_rate;
+    let ffzenhancing_keep_delay_low_latency_was_changed;
     let ffzenhancing_fix_tooltips;
     let ffzenhancing_doubleclick_username_paste_in_chat;
     let ffzenhancing_move_users_in_chat_to_bottom;
@@ -252,36 +253,51 @@
     }
 
 
+    function increasePlayerPlaybackSpeed(video) {
+        video.playbackRate = ffzenhancing_keep_delay_low_rate;
+        ffzenhancing_keep_delay_low_latency_was_changed = true;
+    }
+
+
+    function resetPlayerPlaybackSpeed(video) {
+        if (ffzenhancing_keep_delay_low_latency_was_changed) {
+            video.playbackRate = 1;
+            ffzenhancing_keep_delay_low_latency_was_changed = false;
+        }
+    }
+
+
     function periodicCheckVideoInfo() {
         const video = getVideoLiveAndNotPaused();
         if (video) {
-            if (!ffzenhancing_keep_delay_low && !ffzenhancing_reset_after_delay) {
-                video.playbackRate = 1;
-                return;
-            }
             let stats;
             try {
                 stats = ffz.site.children.player.current.stats;
             } catch {}
             if (stats) {
-                //const lat = Math.max(stats.hlsLatencyBroadcaster, stats.bufferSize);
                 const lat = stats.broadcasterLatency;
-                if (ffzenhancing_reset_after_delay && lat > ffzenhancing_reset_after_delay_delay) {
-                    ffzResetPlayer();
-                    schedulePeriodicCheckVideoInfo(5000);
-                    return;
+                if (ffzenhancing_reset_after_delay) {
+                    if (lat > ffzenhancing_reset_after_delay_delay) {
+                        ffzResetPlayer();
+                        schedulePeriodicCheckVideoInfo(5000);
+                        return;
+                    }
                 }
-                let isLowDelayEnabled = false;
-                try {
-                    isLowDelayEnabled = ffz.site.children.player.current.isLiveLowLatency() && window.localStorage.getItem('lowLatencyModeEnabled') !== 'false';
-                } catch {}    
-                const delay = isLowDelayEnabled ? ffzenhancing_keep_delay_low_delay_low_latency : ffzenhancing_keep_delay_low_delay;
-                if (lat > delay) {
-                    video.playbackRate = ffzenhancing_keep_delay_low_rate;
-                    schedulePeriodicCheckVideoInfo();
-                    return;
+                if (ffzenhancing_keep_delay_low) {
+                    let isLowDelayEnabled = false;
+                    try {
+                        isLowDelayEnabled = ffz.site.children.player.current.isLiveLowLatency() && window.localStorage.getItem('lowLatencyModeEnabled') !== 'false';
+                    } catch {}    
+                    const delay = isLowDelayEnabled ? ffzenhancing_keep_delay_low_delay_low_latency : ffzenhancing_keep_delay_low_delay;
+                    if (lat > delay) {
+                        increasePlayerPlaybackSpeed(video);
+                        schedulePeriodicCheckVideoInfo();
+                        return;
+                    } else {
+                        resetPlayerPlaybackSpeed(video);
+                    }
                 } else {
-                    video.playbackRate = 1;
+                    resetPlayerPlaybackSpeed(video);
                 }
             }
         }
