@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.2';
+    let version = '6.3';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -22,6 +22,7 @@
     let ffzenhancing_reset_after_delay;
     let ffzenhancing_reset_after_delay_delay;
     let ffzenhancing_animate_static_gif_emotes_on_mouse_hover;
+    let ffzenhancing_auto_click_claim_bonus_points;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
     let timers = {};
@@ -34,6 +35,11 @@
     let added_styles = {};
     let visibility_hook_enabled = false;
     let previous_visibility_getter;
+
+
+    function getElementByXpath(xpath) {
+        return document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    }
 
 
     function visibilityHookProc() {
@@ -302,6 +308,17 @@
             }
         }
         if (ffzenhancing_keep_delay_low || ffzenhancing_reset_after_delay) schedulePeriodicCheckVideoInfo(5000);
+    }
+
+
+    function periodicCheckClaimBonus() {
+        if (!ffzenhancing_auto_click_claim_bonus_points) return;
+        let button = getElementByXpath('//button[.//div[contains(@class, "claimable-bonus__icon")]]');
+        if (button) button.click();
+        if (timers['periodicCheckClaimBonus']) {
+            clearTimeout(timers['periodicCheckClaimBonus']);
+        }
+        timers['periodicCheckClaimBonus'] = setTimeout(periodicCheckClaimBonus, 5000);
     }
 
 
@@ -714,6 +731,19 @@
                         processSettings();
                     }
                 });
+                this.settings.add('ffzenhancing.auto_click_claim_bonus_points', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Other Settings',
+                        title: 'Auto Click "Claim Bonus Points" button',
+                        description: 'Periodically check if "Claim Bonus Points" button is alailable and click it.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => {
+                        ffzenhancing_auto_click_claim_bonus_points = val;
+                        periodicCheckClaimBonus();
+                    }
+                });
 
 
                 // Player
@@ -799,12 +829,14 @@
                 ffzenhancing_reset_after_delay = this.settings.get('ffzenhancing.reset_after_delay');
                 ffzenhancing_reset_after_delay_delay = this.settings.get('ffzenhancing.reset_after_delay_delay');
                 ffzenhancing_animate_static_gif_emotes_on_mouse_hover = this.settings.get('ffzenhancing.animate_static_gif_emotes_on_mouse_hover');
+                ffzenhancing_auto_click_claim_bonus_points = this.settings.get('ffzenhancing.auto_click_claim_bonus_points');
                 schedulePeriodicCheckVideoInfo();
                 setupHandlers();
                 error_2000_check();
                 playerFreezeCheck();
                 playerQualityCheck();
                 processSettings_schedule();
+                periodicCheckClaimBonus();
                 this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
                 this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
             }
