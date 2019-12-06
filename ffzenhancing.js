@@ -177,7 +177,7 @@
         if (video) {
             let broadcast_id;
             try {
-                broadcast_id = ffz.site.children.player.current.getManifestInfo()['BROADCAST-ID'];
+                broadcast_id = ffz.site.children.player.current.getSessionData()['BROADCAST-ID'];
             } catch {}
             if (broadcast_id !== undefined && !Number.isNaN(broadcast_id)) { // broadcast_id is NaN when user was offline or in vod, preventing endless refreshes
                 if (video.readyState != 1) {
