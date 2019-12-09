@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.4';
+    let version = '6.5';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -83,6 +83,41 @@
         if (!added_styles[style_id]) return;
         document.head.removeChild(added_styles[style_id]);
         delete added_styles[style_id];
+    }
+
+
+    function processStaticEmoteRestore(el) {
+        el.srcset = el.srcset.replace(/https:\/\//g, 'https://cache.ffzap.com/https://');
+    }
+
+
+    function processStaticEmote(e, el, process_parent_children, skip_set_mouseout) {
+        if (!el) return false;
+        let processed_children = [];
+        if (process_parent_children) {
+            for (const child of el.parentNode.querySelectorAll('img')) {
+                if (child == el) continue;
+                let processed_child = processStaticEmote(e, child, false, true);
+                if (processed_child) processed_children.push(processed_child);
+            }
+        }
+        let can_process_el = el.srcset && el.srcset.startsWith('https://cache.ffzap.com/https://');
+        if (processed_children.length == 0 && !can_process_el) return false;
+        if (!skip_set_mouseout) {
+            let proc = () => {
+                if (can_process_el) processStaticEmoteRestore(el);
+                for (const child of processed_children) {
+                    processStaticEmoteRestore(child);
+                }
+                e.target.removeEventListener('mouseout', proc);
+            };
+            e.target.addEventListener('mouseout', proc);
+        }
+        if (can_process_el) {
+            el.srcset = el.srcset.replace(/https:\/\/cache\.ffzap\.com\/https:\/\//g, 'https://');
+            return el;
+        }
+        return false;
     }
 
 
@@ -392,16 +427,11 @@
         if (ffzenhancing_animate_static_gif_emotes_on_mouse_hover) {
             if (!handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover']) {
                 handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover'] = e => {
-                    if (e.target.nodeName != 'IMG' && e.target.nodeName != 'BUTTON') return;
-                    if (!e.target.classList.contains('ffz-emote') && !e.target.classList.contains('emote-picker__emote-link')) return;
-                    let el = e.target.nodeName == 'BUTTON' ? e.target.querySelector('img') : e.target;
-                    if (!el.srcset || !el.srcset.startsWith('https://cache.ffzap.com/https://')) return;
-                    let proc = () => {
-                        el.srcset = el.srcset.replace(/https:\/\//g, 'https://cache.ffzap.com/https://');
-                        e.target.removeEventListener('mouseout', proc);
-                    };
-                    e.target.addEventListener('mouseout', proc);
-                    el.srcset = el.srcset.replace(/https:\/\/cache\.ffzap\.com\/https:\/\//g, 'https://');
+                    if (e.target.nodeName == 'IMG' && e.target.classList.contains('chat-line__message--emote')) { // mouse over emote in chat
+                        processStaticEmote(e, e.target, true);
+                    } else if (e.target.nodeName == 'BUTTON' && e.target.classList.contains('emote-picker__emote-link')) { // mouse over emote in emote picker
+                        processStaticEmote(e, e.target.querySelector('img'));
+                    }
                 };
                 document.body.addEventListener('mouseover', handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover']);
             }
