@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.5';
+    let version = '6.6';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -349,7 +349,7 @@
     function periodicCheckClaimBonus() {
         if (!ffzenhancing_auto_click_claim_bonus_points) return;
         let button = getElementByXpath('//button[.//div[contains(@class, "claimable-bonus__icon")]]');
-        if (button) button.click();
+        if (button && document.visibilityState === 'visible') button.click();
         if (timers['periodicCheckClaimBonus']) {
             clearTimeout(timers['periodicCheckClaimBonus']);
         }
