@@ -766,7 +766,7 @@
                     ui: {
                         path: 'Add-Ons > FFZ Enhancing Add-On >> Other Settings',
                         title: 'Auto Click "Claim Bonus Points" Button',
-                        description: 'Periodically check if "Claim Bonus Points" button is alailable and click it.',
+                        description: 'Periodically check if "Claim Bonus Points" button is available and click it if tab is active.',
                         component: 'setting-check-box',
                     },
                     changed: val => {
