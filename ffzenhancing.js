@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.6';
+    let version = '6.7';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -470,6 +470,12 @@
                                 setTimeout(() => {
                                     if (chat_line.matches('.ffz-mentioned')) {
                                         let cloned_chat_line = chat_line.cloneNode(true);
+                                        if (!cloned_chat_line.querySelector('.chat-line__timestamp')) {
+                                            let ts = document.createElement('span');
+                                            ts.classList.add('chat-line__timestamp');
+                                            ts.textContent = (new Date()).toLocaleTimeString(window.navigator.userLanguage || window.navigator.language, {hour: 'numeric', minute: '2-digit'});
+                                            cloned_chat_line.prepend(ts);
+                                        }
                                         cloned_chat_line.setAttribute('style', 'border: 1px solid red !important; border-top: none !important;');
                                         let close_button = document.createElement('div');
                                         close_button.setAttribute('style', 'width: 14px; cursor: pointer; top: 5px; right: 5px; position: absolute;');
