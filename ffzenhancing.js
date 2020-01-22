@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.7';
+    let version = '6.8';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -35,6 +35,7 @@
     let added_styles = {};
     let visibility_hook_enabled = false;
     let previous_visibility_getter;
+    let onSinkPlaybackRateChanged_removed = false;
 
 
     function getElementByXpath(xpath) {
@@ -295,6 +296,12 @@
 
 
     function increasePlayerPlaybackSpeed(video) {
+        if (!onSinkPlaybackRateChanged_removed) {
+            onSinkPlaybackRateChanged_removed = true;
+            try {
+                ffz.site.children.player.current.mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
+            } catch {}
+        }        
         video.playbackRate = ffzenhancing_keep_delay_low_rate;
         ffzenhancing_keep_delay_low_latency_was_changed = true;
     }
