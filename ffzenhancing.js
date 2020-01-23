@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.9';
+    let version = '6.10';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -318,10 +318,10 @@
             } catch {}
             if (stats) {
                 if (!onSinkPlaybackRateChanged_removed) {
-                    onSinkPlaybackRateChanged_removed = true;
                     try {
-                        ffz.site.children.player.current.mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
                         ffz.site.children.player.current.setLiveSpeedUpRate(1);
+                        ffz.site.children.player.current.mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
+                        onSinkPlaybackRateChanged_removed = true;
                     } catch {}
                 }        
                 const lat = stats.broadcasterLatency;
