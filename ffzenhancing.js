@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.11';
+    let version = '6.12';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -421,6 +421,9 @@
                         }
                         button[data-a-target="chat-viewer-list"][aria-label="Close"] {
                             margin-left: 30px;
+                        }
+                        .chat-input__buttons-container .tw-align-items-center .tw-mg-r-1 {
+                            height: 30px;
                         }
                     `);
                 } else {
