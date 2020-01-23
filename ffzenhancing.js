@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.10';
+    let version = '6.11';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -75,14 +75,14 @@
         if (added_styles[style_id]) return;
         let style = document.createElement('style');
         style.textContent = style_text;
-        document.head.appendChild(style);
+        document.body.appendChild(style);
         added_styles[style_id] = style;
     }
 
 
     function removeStyleFromSite(style_id) {
         if (!added_styles[style_id]) return;
-        document.head.removeChild(added_styles[style_id]);
+        document.body.removeChild(added_styles[style_id]);
         delete added_styles[style_id];
     }
 
@@ -377,11 +377,11 @@
         // ffzenhancing_move_users_in_chat_to_bottom
         if (!window.location.href.endsWith('/squad')) {
             if (ffzenhancing_move_users_in_chat_to_bottom) {
-                el = element_users_in_chat || document.querySelector('.rooms-header button[data-test-selector="chat-viewer-list"]');
+                el = element_users_in_chat || document.querySelector('.stream-chat-header button[data-test-selector="chat-viewer-list"]');
                 appendEl = document.querySelector('.chat-input__buttons-container > .tw-flex:first-child');
             } else {
                 el = element_users_in_chat || document.querySelector('.chat-input__buttons-container button[data-test-selector="chat-viewer-list"]');
-                appendEl = document.querySelector('.rooms-header > .tw-absolute');
+                appendEl = document.querySelector('.stream-chat-header > .tw-absolute');
             }
             if (el && appendEl) {
                 el = el.parentNode;
@@ -412,13 +412,18 @@
 
         // ffzenhancing_hide_rooms_header
         if (!window.location.href.endsWith('/squad')) {
-            el = document.querySelector('.room-selector .rooms-header');
+            el = document.querySelector('.stream-chat-header');
             if (el) {
                 if (ffzenhancing_hide_rooms_header) {
-                    el.style.setProperty('display', 'none', 'important');
-                    addStyleToSite('ffzenhancing_hide_rooms_header', 'button[data-a-target="chat-viewer-list"][aria-label="Close"] {margin-left: 30px;}');
+                    addStyleToSite('ffzenhancing_hide_rooms_header', `
+                        .stream-chat-header {
+                            display: none !important;
+                        }
+                        button[data-a-target="chat-viewer-list"][aria-label="Close"] {
+                            margin-left: 30px;
+                        }
+                    `);
                 } else {
-                    el.style.removeProperty('display');
                     removeStyleFromSite('ffzenhancing_hide_rooms_header');
                 }
             }
