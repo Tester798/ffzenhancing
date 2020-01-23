@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.8';
+    let version = '6.9';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -296,12 +296,6 @@
 
 
     function increasePlayerPlaybackSpeed(video) {
-        if (!onSinkPlaybackRateChanged_removed) {
-            onSinkPlaybackRateChanged_removed = true;
-            try {
-                ffz.site.children.player.current.mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
-            } catch {}
-        }        
         video.playbackRate = ffzenhancing_keep_delay_low_rate;
         ffzenhancing_keep_delay_low_latency_was_changed = true;
     }
@@ -323,6 +317,13 @@
                 stats = ffz.site.children.player.current.stats;
             } catch {}
             if (stats) {
+                if (!onSinkPlaybackRateChanged_removed) {
+                    onSinkPlaybackRateChanged_removed = true;
+                    try {
+                        ffz.site.children.player.current.mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
+                        ffz.site.children.player.current.setLiveSpeedUpRate(1);
+                    } catch {}
+                }        
                 const lat = stats.broadcasterLatency;
                 if (ffzenhancing_reset_after_delay) {
                     if (lat > ffzenhancing_reset_after_delay_delay) {
