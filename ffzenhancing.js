@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.12';
+    let version = '6.13';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -164,7 +164,10 @@
 
     function ffzResetPlayer() {
         enableVisibilityHook();
-        ffz.emit('site.player:reset');
+        //ffz.emit('site.player:reset');
+        try {
+            ffz.site.children.player.resetPlayer(ffz.site.children.player.current);
+        } catch {}
         setTimeout(disableVisibilityHook, 5000);
     }
 
