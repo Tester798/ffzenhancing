@@ -1,0 +1,17 @@
+*
+!.gitignore
+!Caddyfile
+!css
+!css/style.css
+!_layouts
+!_layouts/default.html
+!images
+!images/image1.png
+!images/image2.png
+!images/image3.png
+!images/image4.png
+!README.md
+!_config.yml
+!ffzenhancing.js
+!notify.ico
+!the_ffz_enhancing_add_on-6.0-an+fx.xpi

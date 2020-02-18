@@ -2,18 +2,26 @@
 <html lang="en-US">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#157878">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>The FFZ Enhancing Add-On</title>
-    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+    <link rel="stylesheet" href="css/style.css">
     <style>
+        .page-header {
+            background-color: #18181b;
+            background-image: linear-gradient(120deg, #18181b, #2f2f37);
+        }
+
+        .project-name {
+            margin-bottom: 20px;
+        }
+
         .carousel-wrapper {
-            height: 400px;
             position: relative;
-            width: 640px;
             margin: 0 auto;
+            padding-top: 50%;
         }
 
         .carousel-item {
@@ -22,9 +30,15 @@
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 25px 50px;
+            padding: 0 30px;
             opacity: 0;
             transition: all 0.5s ease-in-out;
+            text-align: center;
+            max-height: 400px;
+        }
+
+        .carousel-item img {
+            height: 100%;
         }
 
         .arrow {
@@ -35,14 +49,14 @@
         }
 
         .arrow-prev {
-            left: -30px;
+            left: 10px;
             position: absolute;
             top: 50%;
             transform: translateY(-50%) rotate(135deg);
         }
 
         .arrow-next {
-            right: -30px;
+            right: 10px;
             position: absolute;
             top: 50%;
             transform: translateY(-50%) rotate(-45deg);
@@ -60,7 +74,6 @@
             }
         }
 
-        /*Select every element*/
         [id^="item"] {
             display: none;
         }
@@ -68,22 +81,18 @@
         .item-1 {
             z-index: 2;
             opacity: 1;
-            background: url('images/image1.png');
             background-size: cover;
         }
 
         .item-2 {
-            background: url('images/image2.png');
             background-size: cover;
         }
 
         .item-3 {
-            background: url('images/image3.png');
             background-size: cover;
         }
 
         .item-4 {
-            background: url('images/image4.png');
             background-size: cover;
         }
 
@@ -100,6 +109,50 @@
         #item-4:target~.item-4 {
             z-index: 3;
             opacity: 1;
+        }
+
+        #commits_header {
+            text-align: center;
+            color: #606c71;
+        }
+
+        #commits {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        #commits a {
+            color: #606c71;
+        }
+
+        .commit_header {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .commit_version {
+            font-size: 18px;
+            font-weight: bold;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .commit_sha {
+            font-size: 14px;
+            align-self: center;
+        }
+
+        .commit_date {
+            margin-left: auto;
+            font-size: 14px;
+            align-self: center;
+            padding-left: 20px;
+        }
+
+        .commit_message pre {
+            white-space: pre-wrap;
+            padding: 10px;
         }
     </style>
 </head>
@@ -118,23 +171,56 @@
             <span id="item-3"></span>
             <span id="item-4"></span>
             <div class="carousel-item item-1">
+                <img src="images/image1.png">
                 <a class="arrow arrow-prev" href="#item-4"></a>
                 <a class="arrow arrow-next" href="#item-2"></a>
             </div>
             <div class="carousel-item item-2">
+                <img src="images/image2.png">
                 <a class="arrow arrow-prev" href="#item-1"></a>
                 <a class="arrow arrow-next" href="#item-3"></a>
             </div>
             <div class="carousel-item item-3">
+                <img src="images/image3.png">
                 <a class="arrow arrow-prev" href="#item-2"></a>
                 <a class="arrow arrow-next" href="#item-4"></a>
             </div>
             <div class="carousel-item item-4">
+                <img src="images/image4.png">
                 <a class="arrow arrow-prev" href="#item-3"></a>
                 <a class="arrow arrow-next" href="#item-1"></a>
             </div>
         </div>
-        {{ content }}
+        <h3 id="commits_header">Latest changes</h3>
+        <div id="commits">Loading commits...</div>
+        <script>
+            let id_commits = document.getElementById('commits');
+            fetch('https://api.github.com/repos/Tester798/ffzenhancing/commits?page=1&per_page=10')
+                .then((response) => {
+                    return response.json();
+                })
+                .then((json) => {
+                    id_commits.innerHTML = '';
+                    for (let c of json) {
+                        let [ver, desc] = c.commit.message.split('\n\n');
+                        let div = document.createElement('div');
+                        div.innerHTML = `
+                            <div class="commit_header">
+                                <div class="commit_version">${ver}</div>
+                                <div class="commit_sha">@<a href="${c.html_url}">${c.sha.substring(0, 7)}</a></div>
+                                <div class="commit_date">${(new Date(c.commit.author.date)).toLocaleDateString(window.navigator.userLanguage || window.navigator.language)}</div>
+                            </div>
+                            <div class="commit_message">
+                                ${desc ? '<pre>' + desc.replace(/^\* /gm, '• ') + '</pre>' : ''}
+                            </div>
+                        `;
+                        id_commits.appendChild(div);
+                    }
+                })
+                .catch(function(error) {
+                    id_commits.innerHTML = 'Failed loading commits';
+                });
+        </script>
     </main>
 </body>
 

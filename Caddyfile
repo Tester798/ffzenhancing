@@ -1,0 +1,9 @@
+localhost:8001 {
+    index _layouts/default.html
+    log stdout
+    tls off
+    root .
+    header / {
+        -Server
+    }
+}
