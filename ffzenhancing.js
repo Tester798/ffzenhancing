@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.14';
+    let version = '6.15';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -166,7 +166,14 @@
         enableVisibilityHook();
         //ffz.emit('site.player:reset');
         try {
+            let compressed;
+            let video = getVideoLiveAndNotPaused();
+            if (video) compressed = video._ffz_compressed;
             ffz.site.children.player.resetPlayer(ffz.site.children.player.current);
+            if (video && compressed !== undefined) setTimeout(() => {
+                let video = getVideoLiveAndNotPaused();
+                if (video && compressed !== video._ffz_compressed) ffz.site.children.player.compressPlayer(ffz.site.children.player.Player.first, document.createEvent('Event'));
+            }, 1000);
         } catch {}
         setTimeout(disableVisibilityHook, 5000);
     }
