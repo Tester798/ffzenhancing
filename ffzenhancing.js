@@ -36,6 +36,7 @@
     let visibility_hook_enabled = false;
     let previous_visibility_getter;
     let onSinkPlaybackRateChanged_removed = false;
+    let resetPlayerTimeout = false;
 
 
     function getElementByXpath(xpath) {
@@ -46,7 +47,7 @@
     function visibilityHookProc() {
         if (visibility_hook_enabled) return false;
         if (previous_visibility_getter) return previous_visibility_getter();
-        return document.visibilityState === 'hidden';                    
+        return document.visibilityState === 'hidden';
     }
 
 
@@ -333,7 +334,7 @@
                         ffz.site.children.player.current.mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
                         onSinkPlaybackRateChanged_removed = true;
                     } catch {}
-                }        
+                }
                 const lat = stats.broadcasterLatency;
                 if (ffzenhancing_reset_after_delay) {
                     if (lat > ffzenhancing_reset_after_delay_delay) {
@@ -346,7 +347,7 @@
                     let isLowDelayEnabled = false;
                     try {
                         isLowDelayEnabled = ffz.site.children.player.current.isLiveLowLatency() && window.localStorage.getItem('lowLatencyModeEnabled') !== 'false';
-                    } catch {}    
+                    } catch {}
                     const delay = isLowDelayEnabled ? ffzenhancing_keep_delay_low_delay_low_latency : ffzenhancing_keep_delay_low_delay;
                     if (lat > delay) {
                         increasePlayerPlaybackSpeed(video);
@@ -499,7 +500,10 @@
                                         if (!cloned_chat_line.querySelector('.chat-line__timestamp')) {
                                             let ts = document.createElement('span');
                                             ts.classList.add('chat-line__timestamp');
-                                            ts.textContent = (new Date()).toLocaleTimeString(window.navigator.userLanguage || window.navigator.language, {hour: 'numeric', minute: '2-digit'});
+                                            ts.textContent = (new Date()).toLocaleTimeString(window.navigator.userLanguage || window.navigator.language, {
+                                                hour: 'numeric',
+                                                minute: '2-digit'
+                                            });
                                             cloned_chat_line.prepend(ts);
                                         }
                                         cloned_chat_line.setAttribute('style', 'border: 1px solid red !important; border-top: none !important;');
@@ -543,6 +547,23 @@
 
 
     function setupHandlers() {
+        if (!handlers_already_attached['reset_player_click_handler']) {
+            handlers_already_attached['reset_player_click_handler'] = true;
+            document.body.addEventListener('click', e => {
+                if (e.target.classList.contains('ffz-i-t-reset-clicked') || e.target.classList.contains('ffz-i-t-reset')) {
+                    let compressed;
+                    let video = getVideoLiveAndNotPaused();
+                    if (video) compressed = video._ffz_compressed;
+                    if (video && compressed !== undefined) {
+                        if (resetPlayerTimeout) clearTimeout(resetPlayerTimeout);
+                        resetPlayerTimeout = setTimeout(() => {
+                            let video = getVideoLiveAndNotPaused();
+                            if (video && compressed !== video._ffz_compressed) ffz.site.children.player.compressPlayer(ffz.site.children.player.Player.first, document.createEvent('Event'));
+                        }, 1000);
+                    }
+                }
+            });
+        }
         if (!handlers_already_attached['ffzenhancing_focus_input_area_after_emote_select']) {
             handlers_already_attached['ffzenhancing_focus_input_area_after_emote_select'] = true;
             document.body.addEventListener('click', e => {
