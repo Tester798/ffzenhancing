@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.16';
+    let version = '6.17';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -171,10 +171,11 @@
             let video = getVideoLiveAndNotPaused();
             if (video) compressed = video._ffz_compressed;
             ffz.site.children.player.resetPlayer(ffz.site.children.player.current);
-            if (video && compressed !== undefined) setTimeout(() => {
+            if (video && compressed !== undefined) setTimeout(function compRestore(c = 0) {
                 let video = getVideoLiveAndNotPaused();
+                if (!video && c < 10) return setTimeout(() => compRestore(c + 1), 500);
                 if (video && compressed !== video._ffz_compressed) ffz.site.children.player.compressPlayer(ffz.site.children.player.Player.first, document.createEvent('Event'));
-            }, 1000);
+            }, 500);
         } catch {}
         setTimeout(disableVisibilityHook, 5000);
     }
@@ -265,7 +266,7 @@
 
         const video = getVideoLiveAndNotPaused();
         if (video) {
-            for (const el of document.querySelectorAll('.content-overlay-gate')) {
+            for (const el of document.querySelectorAll('[data-a-target="player-overlay-content-gate"]')) {
                 if (el.textContent.includes('#2000') || el.textContent.includes('#4000')) {
                     ffzResetPlayer();
                 }
@@ -556,10 +557,11 @@
                     if (video) compressed = video._ffz_compressed;
                     if (video && compressed !== undefined) {
                         if (resetPlayerTimeout) clearTimeout(resetPlayerTimeout);
-                        resetPlayerTimeout = setTimeout(() => {
+                        resetPlayerTimeout = setTimeout(function compRestore(c = 0) {
                             let video = getVideoLiveAndNotPaused();
+                            if (!video && c < 10) return resetPlayerTimeout = setTimeout(() => compRestore(c + 1), 500);
                             if (video && compressed !== video._ffz_compressed) ffz.site.children.player.compressPlayer(ffz.site.children.player.Player.first, document.createEvent('Event'));
-                        }, 1000);
+                        }, 500);
                     }
                 }
             });
