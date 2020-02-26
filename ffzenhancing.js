@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.17';
+    let version = '6.18';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -174,7 +174,7 @@
             if (video && compressed !== undefined) setTimeout(function compRestore(c = 0) {
                 let video = getVideoLiveAndNotPaused();
                 if (!video && c < 10) return setTimeout(() => compRestore(c + 1), 500);
-                if (video && compressed !== video._ffz_compressed) ffz.site.children.player.compressPlayer(ffz.site.children.player.Player.first, document.createEvent('Event'));
+                if (video && compressed !== !!video._ffz_compressed) ffz.site.children.player.compressPlayer(ffz.site.children.player.Player.first, document.createEvent('Event'));
             }, 500);
         } catch {}
         setTimeout(disableVisibilityHook, 5000);
@@ -560,7 +560,7 @@
                         resetPlayerTimeout = setTimeout(function compRestore(c = 0) {
                             let video = getVideoLiveAndNotPaused();
                             if (!video && c < 10) return resetPlayerTimeout = setTimeout(() => compRestore(c + 1), 500);
-                            if (video && compressed !== video._ffz_compressed) ffz.site.children.player.compressPlayer(ffz.site.children.player.Player.first, document.createEvent('Event'));
+                            if (video && compressed !== !!video._ffz_compressed) ffz.site.children.player.compressPlayer(ffz.site.children.player.Player.first, document.createEvent('Event'));
                         }, 500);
                     }
                 }
