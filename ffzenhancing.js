@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.18';
+    let version = '6.19';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -23,6 +23,7 @@
     let ffzenhancing_reset_after_delay_delay;
     let ffzenhancing_animate_static_gif_emotes_on_mouse_hover;
     let ffzenhancing_auto_click_claim_bonus_points;
+    let ffzenhancing_fix_emote_select;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
     let timers = {};
@@ -451,6 +452,13 @@
             removeStyleFromSite('ffzenhancing_fix_tooltips');
         }
 
+        // ffzenhancing_fix_emote_select
+        if (ffzenhancing_fix_emote_select) {
+            addStyleToSite('ffzenhancing_fix_emote_select', '.ffz--inline {display: inline-block;}');
+        } else {
+            removeStyleFromSite('ffzenhancing_fix_emote_select');
+        }        
+
         // ffzenhancing_animate_static_gif_emotes_on_mouse_hover
         if (ffzenhancing_animate_static_gif_emotes_on_mouse_hover) {
             if (!handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover']) {
@@ -829,6 +837,19 @@
                         periodicCheckClaimBonus();
                     }
                 });
+                this.settings.add('ffzenhancing.fix_emote_select', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Other Settings',
+                        title: 'Fix emotes select',
+                        description: 'Fix emotes select when trying to select emotes in chat line.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => {
+                        ffzenhancing_fix_emote_select = val;
+                        processSettings();
+                    }
+                });
 
 
                 // Player
@@ -915,6 +936,7 @@
                 ffzenhancing_reset_after_delay_delay = this.settings.get('ffzenhancing.reset_after_delay_delay');
                 ffzenhancing_animate_static_gif_emotes_on_mouse_hover = this.settings.get('ffzenhancing.animate_static_gif_emotes_on_mouse_hover');
                 ffzenhancing_auto_click_claim_bonus_points = this.settings.get('ffzenhancing.auto_click_claim_bonus_points');
+                ffzenhancing_fix_emote_select = this.settings.get('ffzenhancing.fix_emote_select');
                 schedulePeriodicCheckVideoInfo();
                 setupHandlers();
                 error_2000_check();
