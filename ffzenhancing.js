@@ -265,12 +265,10 @@
             return;
         }
 
-        const video = getVideoLiveAndNotPaused();
-        if (video) {
-            for (const el of document.querySelectorAll('[data-a-target="player-overlay-content-gate"]')) {
-                if (el.textContent.includes('#2000') || el.textContent.includes('#4000')) {
-                    ffzResetPlayer();
-                }
+        for (const el of document.querySelectorAll('[data-a-target="player-overlay-content-gate"]')) {
+            if (el.textContent.includes('#2000') || el.textContent.includes('#4000')) {
+                ffzResetPlayer();
+                break;
             }
         }
 
