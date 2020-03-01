@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.19';
+    let version = '6.20';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
