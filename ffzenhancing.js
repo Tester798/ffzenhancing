@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.20';
+    let version = '6.21';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -744,7 +744,7 @@
                         component: 'setting-text-box',
                         process: val => {
                             val = parseFloat(val);
-                            if (isNaN(val) || !isFinite(val)) val = 10;
+                            if (isNaN(val) || !isFinite(val)) val = 30;
                             if (val < 10) val = 10;
                             return val;
                         }
@@ -900,7 +900,7 @@
                         process: val => {
                             val = parseFloat(val);
                             if (isNaN(val) || !isFinite(val)) val = 4;
-                            if (val < 4) val = 4;
+                            if (val < 2) val = 2;
                             if (val > 20) val = 20;
                             return val;
                         }
