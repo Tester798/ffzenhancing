@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.21';
+    let version = '6.22';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -201,7 +201,7 @@
         if (
             el.classList.contains('chat-author__display-name') ||
             el.classList.contains('chat-line__message-mention') ||
-            (el.classList.contains('tw-link') && el.parentNode.parentNode.parentNode.classList.contains('viewer-card-header__display-name')) // chatter name link in viewer card
+            (el.classList.contains('tw-link') && el.parentNode.parentNode.parentNode.parentNode.classList.contains('viewer-card-header__display-name')) // chatter name link in viewer card
         ) {
             return true;
         }
