@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.22';
+    let version = '6.23';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -325,13 +325,15 @@
         if (video) {
             let stats;
             try {
-                stats = ffz.site.children.player.current.stats;
+                stats = ffz.site.children.player.current.stats || ffz.site.children.player.current.core?.stats;
             } catch {}
+
             if (stats) {
                 if (!onSinkPlaybackRateChanged_removed) {
                     try {
                         ffz.site.children.player.current.setLiveSpeedUpRate(1);
-                        ffz.site.children.player.current.mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
+                        const mediaSinkManager = ffz.site.children.player.current.mediaSinkManager || ffz.site.children.player.current.core?.mediaSinkManager;
+                        mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
                         onSinkPlaybackRateChanged_removed = true;
                     } catch {}
                 }
