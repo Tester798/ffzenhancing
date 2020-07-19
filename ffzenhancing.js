@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.25';
+    let version = '6.26';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -856,7 +856,7 @@
                     default: false,
                     ui: {
                         path: 'Add-Ons > FFZ Enhancing Add-On >> Player',
-                        title: 'Auto Reload on Error #2000 or #4000',
+                        title: 'Auto Reload on Errors #2000, #3000 or #4000',
                         description: 'Reload player automatically when network errors #2000, #3000 or #4000 happen.',
                         component: 'setting-check-box',
                     },
