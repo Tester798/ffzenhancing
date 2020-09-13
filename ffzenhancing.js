@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.27';
+    let version = '6.28';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -266,7 +266,7 @@
         }
 
         for (const el of document.querySelectorAll('[data-a-target="player-overlay-content-gate"]')) {
-            if (el.textContent.includes('#2000') || el.textContent.includes('#3000') || el.textContent.includes('#4000') || el.textContent.includes('#5000')) {
+            if (el.textContent.includes('#1000') || el.textContent.includes('#2000') || el.textContent.includes('#3000') || el.textContent.includes('#4000') || el.textContent.includes('#5000')) {
                 ffzResetPlayer();
                 break;
             }
@@ -856,8 +856,8 @@
                     default: false,
                     ui: {
                         path: 'Add-Ons > FFZ Enhancing Add-On >> Player',
-                        title: 'Auto Reload on Errors #2000, #3000, #4000 or #5000',
-                        description: 'Reload player automatically when network errors #2000, #3000, #4000 or #5000 happen.',
+                        title: 'Auto Reload on Errors #1000, #2000, #3000, #4000 or #5000',
+                        description: 'Reload player automatically when network errors #1000, #2000, #3000, #4000 or #5000 happen.',
                         component: 'setting-check-box',
                     },
                     changed: val => {
