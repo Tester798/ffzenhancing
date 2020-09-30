@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.28';
+    let version = '6.29';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -323,22 +323,27 @@
     function periodicCheckVideoInfo() {
         const video = getVideoLiveAndNotPaused();
         if (video) {
-            let stats;
+            let liveLatency;
             try {
-                stats = ffz.site.children.player.current.stats || (ffz.site.children.player.current.core && ffz.site.children.player.current.core.stats);
+                liveLatency = (ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.liveLatency)
+                    || (ffz.site.children.player.current.stats && ffz.site.children.player.current.stats.broadcasterLatency)
+                    || (ffz.site.children.player.current.core && ffz.site.children.player.current.core.stats && ffz.site.children.player.current.core.stats.broadcasterLatency);
             } catch {}
-            if (stats) {
+            if (liveLatency !== undefined) {
                 if (!onSinkPlaybackRateChanged_removed) {
                     try {
                         ffz.site.children.player.current.setLiveSpeedUpRate(1);
                         const mediaSinkManager = ffz.site.children.player.current.mediaSinkManager || (ffz.site.children.player.current.core && ffz.site.children.player.current.core.mediaSinkManager);
                         mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
+
+                        ffz.site.children.player.current.setPlaybackRate(1);
+                        ffz.site.children.player.current.setPlaybackRate = () => {};
+
                         onSinkPlaybackRateChanged_removed = true;
                     } catch {}
                 }
-                const lat = stats.broadcasterLatency;
                 if (ffzenhancing_reset_after_delay) {
-                    if (lat > ffzenhancing_reset_after_delay_delay) {
+                    if (liveLatency > ffzenhancing_reset_after_delay_delay) {
                         ffzResetPlayer();
                         schedulePeriodicCheckVideoInfo(5000);
                         return;
@@ -350,7 +355,7 @@
                         isLowDelayEnabled = ffz.site.children.player.current.isLiveLowLatency() && window.localStorage.getItem('lowLatencyModeEnabled') !== 'false';
                     } catch {}
                     const delay = isLowDelayEnabled ? ffzenhancing_keep_delay_low_delay_low_latency : ffzenhancing_keep_delay_low_delay;
-                    if (lat > delay) {
+                    if (liveLatency > delay) {
                         increasePlayerPlaybackSpeed(video);
                         schedulePeriodicCheckVideoInfo();
                         return;
