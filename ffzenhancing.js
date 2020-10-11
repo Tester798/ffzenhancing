@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.29';
+    let version = '6.30';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -614,6 +614,27 @@
                     timeoutShowCard = setTimeout(() => {
                         ignore_next_event = true;
                         e.target.click();
+
+                        let clicked_username = e.target.innerText.toLowerCase();
+                        if (clicked_username.startsWith('@'))
+                            clicked_username = clicked_username.substr(1);
+                        setTimeout(() => {
+                            let card = document.querySelector('.chat-room__viewer-card');
+                            if (card) {
+                                addStyleToSite('highlight_' + clicked_username, `
+                                    .chat-line__message[data-user="${clicked_username}"] {
+                                        background-color: #ff0000;
+                                    }
+                                `);
+                                let card_close = card.querySelector('[data-a-target="viewer-card-close-button"]');
+                                if (card_close) {
+                                    card_close.addEventListener('click', () => {
+                                        removeStyleFromSite('highlight_' + clicked_username);
+                                    });
+                                }
+                            }
+                        }, 500);
+
                     }, 400);
                 }
             }, true);
