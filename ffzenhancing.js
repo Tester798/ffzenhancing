@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.30';
+    let version = '6.31';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -24,6 +24,7 @@
     let ffzenhancing_animate_static_gif_emotes_on_mouse_hover;
     let ffzenhancing_auto_click_claim_bonus_points;
     let ffzenhancing_fix_emote_select;
+    let ffzenhancing_highlight_user_messages;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
     let timers = {};
@@ -615,25 +616,27 @@
                         ignore_next_event = true;
                         e.target.click();
 
-                        let clicked_username = e.target.innerText.toLowerCase();
-                        if (clicked_username.startsWith('@'))
-                            clicked_username = clicked_username.substr(1);
-                        setTimeout(() => {
-                            let card = document.querySelector('.chat-room__viewer-card');
-                            if (card) {
-                                addStyleToSite('highlight_' + clicked_username, `
-                                    .chat-line__message[data-user="${clicked_username}"] {
-                                        background-color: #ff0000;
+                        if (ffzenhancing_highlight_user_messages) {
+                            let clicked_username = e.target.innerText.toLowerCase();
+                            if (clicked_username.startsWith('@'))
+                                clicked_username = clicked_username.substr(1);
+                            setTimeout(() => {
+                                let card = document.querySelector('.chat-room__viewer-card');
+                                if (card) {
+                                    addStyleToSite('highlight_' + clicked_username, `
+                                        .chat-line__message[data-user="${clicked_username}"] {
+                                            background-color: #a50000;
+                                        }
+                                    `);
+                                    let card_close = card.querySelector('[data-a-target="viewer-card-close-button"]');
+                                    if (card_close) {
+                                        card_close.addEventListener('click', () => {
+                                            removeStyleFromSite('highlight_' + clicked_username);
+                                        });
                                     }
-                                `);
-                                let card_close = card.querySelector('[data-a-target="viewer-card-close-button"]');
-                                if (card_close) {
-                                    card_close.addEventListener('click', () => {
-                                        removeStyleFromSite('highlight_' + clicked_username);
-                                    });
                                 }
-                            }
-                        }, 500);
+                            }, 500);
+                        }
 
                     }, 400);
                 }
@@ -875,6 +878,16 @@
                         processSettings();
                     }
                 });
+                this.settings.add('ffzenhancing.highlight_user_messages', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Other Settings',
+                        title: 'Highlight selected user messages',
+                        description: 'Highlight messages of the user after username was clicked in chat.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => ffzenhancing_highlight_user_messages = val
+                });
 
 
                 // Player
@@ -962,6 +975,7 @@
                 ffzenhancing_animate_static_gif_emotes_on_mouse_hover = this.settings.get('ffzenhancing.animate_static_gif_emotes_on_mouse_hover');
                 ffzenhancing_auto_click_claim_bonus_points = this.settings.get('ffzenhancing.auto_click_claim_bonus_points');
                 ffzenhancing_fix_emote_select = this.settings.get('ffzenhancing.fix_emote_select');
+                ffzenhancing_highlight_user_messages = this.settings.get('ffzenhancing.highlight_user_messages');
                 schedulePeriodicCheckVideoInfo();
                 setupHandlers();
                 error_2000_check();
