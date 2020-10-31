@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.31';
+    let version = '6.32';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -18,6 +18,7 @@
     let ffzenhancing_auto_reload_on_hanged_video_after;
     let ffzenhancing_auto_reload_on_hanged_video_currentTime;
     let ffzenhancing_auto_check_player_quality;
+    let ffzenhancing_auto_check_player_compressor;
     let ffzenhancing_pin_mentions;
     let ffzenhancing_reset_after_delay;
     let ffzenhancing_reset_after_delay_delay;
@@ -39,6 +40,8 @@
     let previous_visibility_getter;
     let onSinkPlaybackRateChanged_removed = false;
     let resetPlayerTimeout = false;
+    let compressPlayerOrigFunc;
+    let compressPlayerWanted;
 
 
     function getElementByXpath(xpath) {
@@ -130,6 +133,18 @@
     }
 
 
+    function compressPlayerHook(inst, e) {
+        if (ffzenhancing_auto_check_player_compressor) {
+            if (compressPlayerWanted === undefined) compressPlayerWanted = this.settings.get('player.compressor.default');
+            if (e !== undefined) {
+                let video = getVideoLiveAndNotPaused();
+                if (video) compressPlayerWanted = !video._ffz_compressed;
+            }
+        }
+        compressPlayerOrigFunc.call(ffz.site.children.player, inst, e);
+    }
+
+
     function getCurrentPlayerState() {
         current_player_volume = undefined;
         current_player_muted = undefined;
@@ -169,15 +184,8 @@
         enableVisibilityHook();
         //ffz.emit('site.player:reset');
         try {
-            let compressed;
-            let video = getVideoLiveAndNotPaused();
-            if (video) compressed = video._ffz_compressed;
             ffz.site.children.player.resetPlayer(ffz.site.children.player.current);
-            if (video && compressed !== undefined) setTimeout(function compRestore(c = 0) {
-                let video = getVideoLiveAndNotPaused();
-                if (!video && c < 10) return setTimeout(() => compRestore(c + 1), 500);
-                if (video && compressed !== !!video._ffz_compressed) ffz.site.children.player.compressPlayer(ffz.site.children.player.Player.first, document.createEvent('Event'));
-            }, 500);
+            setTimeout(playerCompressorCheck, 1000);
         } catch {}
         setTimeout(disableVisibilityHook, 5000);
     }
@@ -255,6 +263,27 @@
         }
         timers['playerQualityCheck'] = setTimeout(playerQualityCheck, 5000);
     }
+
+
+    function playerCompressorCheck() {
+        if (!ffzenhancing_auto_check_player_compressor) return;
+        if (compressPlayerOrigFunc === undefined) {
+            compressPlayerOrigFunc = ffz.site.children.player.compressPlayer;
+            ffz.site.children.player.compressPlayer = compressPlayerHook;
+        }
+        if (timers['playerCompressorCheck']) {
+            clearTimeout(timers['playerCompressorCheck']);
+        }
+        try {
+            let video = getVideoLiveAndNotPaused();
+            if (video) {
+                if (compressPlayerWanted !== !!video._ffz_compressed) {
+                    compressPlayerOrigFunc.call(ffz.site.children.player, ffz.site.children.player.Player.first, document.createEvent('Event'));
+                }
+            }
+        } catch {}
+        timers['playerCompressorCheck'] = setTimeout(playerCompressorCheck, 5000);
+    }    
 
 
     function error_2000_check() {
@@ -950,6 +979,19 @@
                         playerFreezeCheck();
                     }
                 });
+                this.settings.add('ffzenhancing.auto_check_player_compressor', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Player',
+                        title: 'Auto Check Player Compressor Status',
+                        description: 'Reset compressor status to last used if different status detected.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => {
+                        ffzenhancing_auto_check_player_compressor = val;
+                        playerCompressorCheck();
+                    }
+                });
 
 
                 this.enable();
@@ -969,6 +1011,7 @@
                 ffzenhancing_auto_reload_on_hanged_video = this.settings.get('ffzenhancing.auto_reload_on_hanged_video');
                 ffzenhancing_auto_reload_on_hanged_video_after = this.settings.get('ffzenhancing.auto_reload_on_hanged_video_after');
                 ffzenhancing_auto_check_player_quality = this.settings.get('ffzenhancing.auto_check_player_quality');
+                ffzenhancing_auto_check_player_compressor = this.settings.get('ffzenhancing.auto_check_player_compressor');
                 ffzenhancing_pin_mentions = this.settings.get('ffzenhancing.pin_mentions');
                 ffzenhancing_reset_after_delay = this.settings.get('ffzenhancing.reset_after_delay');
                 ffzenhancing_reset_after_delay_delay = this.settings.get('ffzenhancing.reset_after_delay_delay');
@@ -981,6 +1024,7 @@
                 error_2000_check();
                 playerFreezeCheck();
                 playerQualityCheck();
+                playerCompressorCheck();
                 processSettings_schedule();
                 periodicCheckClaimBonus();
                 this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
