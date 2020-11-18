@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.32';
+    let version = '6.33';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -235,6 +235,7 @@
         if (video) {
             let broadcast_id;
             try {
+                if (ffz.site.router.current.name != "user") return false;
                 broadcast_id = ffz.site.children.player.current.getSessionData()['BROADCAST-ID'];
             } catch {}
             if (broadcast_id !== undefined && !Number.isNaN(broadcast_id)) { // broadcast_id is NaN when user was offline or in vod, preventing endless refreshes
