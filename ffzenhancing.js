@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.34';
+    let version = '6.35';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -263,7 +263,7 @@
         if (video) {
             let broadcast_id;
             try {
-                if (ffz.site.router.current.name != "user") return false;
+                if (ffz.site.router.current.name != 'user') return false;
                 broadcast_id = ffz.site.children.player.current.getSessionData()['BROADCAST-ID'];
             } catch {}
             if (broadcast_id !== undefined && !Number.isNaN(broadcast_id)) { // broadcast_id is NaN when user was offline or in vod, preventing endless refreshes
@@ -324,10 +324,13 @@
             return;
         }
 
-        for (const el of document.querySelectorAll('[data-a-target="player-overlay-content-gate"]')) {
-            if (el.textContent.includes('#1000') || el.textContent.includes('#2000') || el.textContent.includes('#3000') || el.textContent.includes('#4000') || el.textContent.includes('#5000')) {
-                ffzResetPlayer();
-                break;
+        const video = getVideoLiveAndNotPaused();
+        if (video) {
+            for (const el of document.querySelectorAll('[data-a-target="player-overlay-content-gate"]')) {
+                if (el.textContent.includes('#1000') || el.textContent.includes('#2000') || el.textContent.includes('#3000') || el.textContent.includes('#4000') || el.textContent.includes('#5000')) {
+                    ffzResetPlayer();
+                    break;
+                }
             }
         }
 
