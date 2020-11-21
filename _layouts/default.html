@@ -203,7 +203,7 @@
                     id_commits.innerHTML = '';
                     for (let c of json) {
                         let [ver, desc] = c.commit.message.split('\n\n');
-                        desc = desc?.replace(/#([0-9])+/gm, '<a href="https://github.com/Tester798/ffzenhancing/pull/$1">#$1</a>');
+                        desc = desc?.replace(/#([0-9]+)/gm, '<a href="https://github.com/Tester798/ffzenhancing/pull/$1">#$1</a>');
                         let div = document.createElement('div');
                         div.innerHTML = `
                             <div class="commit_header">
