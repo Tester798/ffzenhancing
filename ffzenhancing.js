@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.35';
+    let version = '6.36';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -42,6 +42,29 @@
     let resetPlayerTimeout = false;
     let compressPlayerOrigFunc;
     let compressPlayerWanted;
+    let currentPlayerUserPaused = false;
+    let prev_player_onStateChanged;
+
+
+    function new_onStateChanged(e) {
+        try {
+            if (e === "Idle") {
+                currentPlayerUserPaused = this.paused;
+            } else {
+                currentPlayerUserPaused = false;
+            }
+            prev_player_onStateChanged.call(this, e);
+        } catch {}
+    }
+
+
+    function playerMount() {
+        try {
+            if (ffz.site.children.player.current.core.onStateChanged === new_onStateChanged) return;
+            prev_player_onStateChanged = ffz.site.children.player.current.core.onStateChanged;
+            ffz.site.children.player.current.core.onStateChanged = new_onStateChanged;
+        } catch {}
+    }
 
 
     function replaceFunctions() {
@@ -259,19 +282,19 @@
 
 
     function getVideoLiveAndNotPaused() {
-        const video = document.querySelector('video');
-        if (video) {
-            let broadcast_id;
-            try {
+        try {
+            const video = ffz.site.children.player.current.core.mediaSinkManager.video;
+            if (video) {
+                let broadcast_id;
                 if (ffz.site.router.current.name != 'user') return false;
                 broadcast_id = ffz.site.children.player.current.getSessionData()['BROADCAST-ID'];
-            } catch {}
-            if (broadcast_id !== undefined && !Number.isNaN(broadcast_id)) { // broadcast_id is NaN when user was offline or in vod, preventing endless refreshes
-                if (video.readyState != 1) {
-                    return video;
+                if (broadcast_id !== undefined && !Number.isNaN(broadcast_id)) { // broadcast_id is NaN when user was offline or in vod, preventing endless refreshes
+                    if (!currentPlayerUserPaused) {
+                        return video;
+                    }
                 }
             }
-        }
+        } catch {}
         return false;
     }
 
@@ -324,8 +347,7 @@
             return;
         }
 
-        const video = getVideoLiveAndNotPaused();
-        if (video) {
+        if (!currentPlayerUserPaused) {
             for (const el of document.querySelectorAll('[data-a-target="player-overlay-content-gate"]')) {
                 if (el.textContent.includes('#1000') || el.textContent.includes('#2000') || el.textContent.includes('#3000') || el.textContent.includes('#4000') || el.textContent.includes('#5000')) {
                     ffzResetPlayer();
@@ -1062,6 +1084,7 @@
                 replaceFunctions();
                 this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
                 this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
+                this.site.children.player.PlayerSource.on('update', playerMount, this);
             }
         }
         FFZEnhancingAddOn.register('ffz-enhancing-addon');
