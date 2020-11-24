@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.36';
+    let version = '6.37';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -44,6 +44,7 @@
     let compressPlayerWanted;
     let currentPlayerUserPaused = false;
     let prev_player_onStateChanged;
+    let added_message_highlights = {};
 
 
     function new_onStateChanged(e) {
@@ -128,12 +129,31 @@
     }
 
 
+    function highlightMessage(username) {
+        const style = addStyleToSite('highlight_' + username, `
+            .chat-line__message[data-user="${username}"] {
+                background-color: #a50000;
+            }
+        `);
+        if (style) added_message_highlights[username] = style;
+    }
+
+
+    function removeAllHighlightedMessages() {
+        for (const username in added_message_highlights) {
+            removeStyleFromSite('highlight_' + username);
+            delete added_message_highlights[username]
+        }
+    }
+
+
     function addStyleToSite(style_id, style_text) {
         if (added_styles[style_id]) return;
         let style = document.createElement('style');
         style.textContent = style_text;
         document.body.appendChild(style);
         added_styles[style_id] = style;
+        return style;
     }
 
 
@@ -260,7 +280,7 @@
     function usernameElementClicked(el) {
         if (
             el.classList.contains('chat-author__display-name') ||
-            el.classList.contains('chat-line__message-mention') ||
+            el.classList.contains('chat-line__message-mention') && !el.classList.contains('ffz-i-threads') ||
             (el.classList.contains('tw-link') && el.parentNode.parentNode.parentNode.parentNode.classList.contains('viewer-card-header__display-name')) // chatter name link in viewer card
         ) {
             return true;
@@ -706,15 +726,11 @@
                             setTimeout(() => {
                                 let card = document.querySelector('.chat-room__viewer-card');
                                 if (card) {
-                                    addStyleToSite('highlight_' + clicked_username, `
-                                        .chat-line__message[data-user="${clicked_username}"] {
-                                            background-color: #a50000;
-                                        }
-                                    `);
+                                    highlightMessage(clicked_username);
                                     let card_close = card.querySelector('[data-a-target="viewer-card-close-button"]');
                                     if (card_close) {
                                         card_close.addEventListener('click', () => {
-                                            removeStyleFromSite('highlight_' + clicked_username);
+                                            removeAllHighlightedMessages();
                                         });
                                     }
                                 }
