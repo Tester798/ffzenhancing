@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.37';
+    let version = '6.38';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -64,34 +64,6 @@
             if (ffz.site.children.player.current.core.onStateChanged === new_onStateChanged) return;
             prev_player_onStateChanged = ffz.site.children.player.current.core.onStateChanged;
             ffz.site.children.player.current.core.onStateChanged = new_onStateChanged;
-        } catch {}
-    }
-
-
-    function replaceFunctions() {
-        try {
-            if (ffz.site.children.player.tryTheatreMode.toString() === 'tryTheatreMode(e){e._ffz_theater_timer||(e._ffz_theater_timer=setTimeout(()=>{e._ffz_theater_timer=null,this.settings.get("player.theatre.auto-enter")&&e._ffz_mounted&&"user-home"!==this.router.current_name&&(e.props.channelHomeLive||e.props.channelHomeCarousel||e.props.theatreModeEnabled||Date.now()-(e._ffz_theater_start||0)>2e3||e.props.onTheatreModeEnabled&&e.props.onTheatreModeEnabled())},250))}') {
-                // trying to fix some ffz bugs by ourselves
-                // replacing in: ffz.site.children.player.tryTheatreMode
-                // line: if ( this.router.current_name === 'user-home' )
-                // with: if ( this.router.current_name !== 'user' )
-                ffz.site.children.player.tryTheatreMode = function(inst) {
-                    if ( ! inst._ffz_theater_timer )
-                        inst._ffz_theater_timer = setTimeout(() => {
-                            inst._ffz_theater_timer = null;
-                            if ( ! this.settings.get('player.theatre.auto-enter') || ! inst._ffz_mounted )
-                                return;
-                            if ( this.router.current_name !== 'user' )
-                                return;
-                            if ( inst.props.channelHomeLive || inst.props.channelHomeCarousel || inst.props.theatreModeEnabled )
-                                return;
-                            if ( Date.now() - (inst._ffz_theater_start ||0) > 2000 )
-                                return;
-                            if ( inst.props.onTheatreModeEnabled )
-                                inst.props.onTheatreModeEnabled();
-                        }, 250);
-                };
-            }
         } catch {}
     }
 
@@ -1097,7 +1069,6 @@
                 playerCompressorCheck();
                 processSettings_schedule();
                 periodicCheckClaimBonus();
-                replaceFunctions();
                 this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
                 this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
                 this.site.children.player.PlayerSource.on('update', playerMount, this);
