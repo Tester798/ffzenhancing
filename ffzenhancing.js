@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.40';
+    let version = '6.41';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -400,7 +400,7 @@
         try {
             let video = getVideoLiveAndNotPaused();
             if (video) {
-                if (compressPlayerWanted !== !!video._ffz_compressed) {
+                if (compressPlayerWanted !== undefined && compressPlayerWanted !== !!video._ffz_compressed) {
                     compressPlayerOrigFunc.call(ffz.site.children.player, ffz.site.children.player.Player.first, document.createEvent('Event'));
                 }
             }
