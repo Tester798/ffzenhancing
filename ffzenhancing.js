@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.38';
+    let version = '6.39';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -45,6 +45,66 @@
     let currentPlayerUserPaused = false;
     let prev_player_onStateChanged;
     let added_message_highlights = {};
+
+
+    function replaceFunctions() {
+        ffz.site.children.chat.ChatBuffer.ready((cls, instances) => {
+            const t = ffz.site.children.chat;
+
+            let added = false;
+            for (const inst of instances) {              
+                if (!added) {
+                    const handler = inst.props.messageHandlerAPI;
+                    if (handler) {
+                        added = true;
+                        if (inst.handleMessage === undefined) {                            
+                            handler.addMessageHandler(my_handleMessage);
+                        } else {
+                            const orig_handleMessage = inst.handleMessage;
+                            handler.removeMessageHandler(orig_handleMessage);
+                            handler.addMessageHandler(my_handleMessage);
+                            handler.addMessageHandler(orig_handleMessage);
+                        }
+                    }
+                }
+
+                function my_handleMessage(msg) {
+                    if (msg) {
+                        const types = t.chat_types || {};
+                        const mod_types = t.mod_types || {};
+                        if (msg.type === types.Moderation && inst.unsetModeratedUser) {
+                            if (inst.props.isCurrentUserModerator)
+                                return;
+                            const user = msg.userLogin;
+                            if (inst.moderatedUsers.has(user))
+                                return;
+                            const mod_action = msg.moderationType;
+                            let new_action;
+                            if (mod_action === mod_types.Ban)
+                                new_action = 'ban';
+                            else if (mod_action === mod_types.Delete)
+                                new_action = 'delete';
+                            else if (mod_action === mod_types.Unban)
+                                new_action = 'unban';
+                            else if (mod_action === mod_types.Timeout)
+                                new_action = 'timeout';
+                            if (new_action)
+                                msg.moderationActionType = new_action;
+                            inst.moderateBuffers([
+                                inst.buffer,
+                                inst.delayedMessageBuffer.map(e => e.event)
+                            ], user, msg);
+                            inst.delayedMessageBuffer.push({
+                                event: msg,
+                                time: Date.now(),
+                                shouldDelay: false
+                            });
+                        }
+                    }
+                }                
+            }
+        });        
+    }
 
 
     function new_onStateChanged(e) {
@@ -1069,6 +1129,7 @@
                 playerCompressorCheck();
                 processSettings_schedule();
                 periodicCheckClaimBonus();
+                replaceFunctions();
                 this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
                 this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
                 this.site.children.player.PlayerSource.on('update', playerMount, this);
