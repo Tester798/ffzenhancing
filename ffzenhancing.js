@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.42';
+    let version = '6.43';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -26,6 +26,7 @@
     let ffzenhancing_auto_click_claim_bonus_points;
     let ffzenhancing_fix_emote_select;
     let ffzenhancing_highlight_user_messages;
+    let ffzenhancing_visibility_hook_time;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
     let timers = {};
@@ -37,9 +38,8 @@
     let current_player_quality;
     let added_styles = {};
     let visibility_hook_enabled = false;
-    let previous_visibility_getter;
+    let orig_visibilityStateProc;
     let visibility_hook_timeout;
-    let visibility_hook_timeout_time = 5 * 60 * 1000;
     let onSinkPlaybackRateChanged_removed = false;
     let resetPlayerTimeout = false;
     let compressPlayerOrigFunc;
@@ -154,28 +154,40 @@
     }
 
 
-    function visibilityHookProc() {
-        if (visibility_hook_enabled) return false;
-        if (previous_visibility_getter) return previous_visibility_getter();
-        return document.visibilityState === 'hidden';
+    function visibilityStateHookProc() {
+        if (visibility_hook_enabled) return 'visible';
+        return orig_visibilityStateProc();
     }
+
+    
+    function hiddenHookProc() {
+        return document.visibilityState === 'hidden';
+    }    
 
 
     function enableVisibilityHook() {
         clearTimeout(visibility_hook_timeout);
-        visibility_hook_timeout = setTimeout(disableVisibilityHook, visibility_hook_timeout_time);
+        visibility_hook_timeout = setTimeout(disableVisibilityHook, ffzenhancing_visibility_hook_time * 1000);
         visibility_hook_enabled = true;
-        let tmp = Object.getOwnPropertyDescriptor(document, 'hidden');
-        if (tmp) { // custom getter already defined
-            if (tmp.get === visibilityHookProc) return; // our hook already defined
-            previous_visibility_getter = tmp.get; // saving previous hook
+
+        if (orig_visibilityStateProc === undefined) orig_visibilityStateProc = document.__lookupGetter__('visibilityState').bind(document);
+        if (document.__lookupGetter__('visibilityState') !== visibilityStateHookProc) {
+            try {
+                Object.defineProperty(document, 'visibilityState', {
+                    configurable: true,
+                    get: visibilityStateHookProc
+                });
+            } catch {}
         }
-        try {
-            Object.defineProperty(document, 'hidden', {
-                configurable: true,
-                get: visibilityHookProc
-            });
-        } catch {}
+
+        if (document.__lookupGetter__('hidden') !== hiddenHookProc) {
+            try {
+                Object.defineProperty(document, 'hidden', {
+                    configurable: true,
+                    get: hiddenHookProc
+                });
+            } catch {}
+        }
     }
 
 
@@ -1126,6 +1138,25 @@
                         playerCompressorCheck();
                     }
                 });
+                this.settings.add('ffzenhancing.visibility_hook_time', {
+                    default: 5,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Player',
+                        title: 'Visibility Hook Time',
+                        description: 'Delay before visibility hook deactivation.',
+                        component: 'setting-text-box',
+                        process: val => {
+                            val = parseFloat(val);
+                            if (isNaN(val) || !isFinite(val)) val = 5;
+                            if (val < 5) val = 5;
+                            if (val > 600) val = 600;
+                            return val;
+                        }
+                    },
+                    changed: val => {
+                        ffzenhancing_visibility_hook_time = val;
+                    }
+                });
 
 
                 this.enable();
@@ -1153,6 +1184,7 @@
                 ffzenhancing_auto_click_claim_bonus_points = this.settings.get('ffzenhancing.auto_click_claim_bonus_points');
                 ffzenhancing_fix_emote_select = this.settings.get('ffzenhancing.fix_emote_select');
                 ffzenhancing_highlight_user_messages = this.settings.get('ffzenhancing.highlight_user_messages');
+                ffzenhancing_visibility_hook_time = this.settings.get('ffzenhancing.visibility_hook_time');
                 schedulePeriodicCheckVideoInfo();
                 setupHandlers();
                 error_2000_check();
