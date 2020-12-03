@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.41';
+    let version = '6.42';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -38,6 +38,8 @@
     let added_styles = {};
     let visibility_hook_enabled = false;
     let previous_visibility_getter;
+    let visibility_hook_timeout;
+    let visibility_hook_timeout_time = 5 * 60 * 1000;
     let onSinkPlaybackRateChanged_removed = false;
     let resetPlayerTimeout = false;
     let compressPlayerOrigFunc;
@@ -160,6 +162,8 @@
 
 
     function enableVisibilityHook() {
+        clearTimeout(visibility_hook_timeout);
+        visibility_hook_timeout = setTimeout(disableVisibilityHook, visibility_hook_timeout_time);
         visibility_hook_enabled = true;
         let tmp = Object.getOwnPropertyDescriptor(document, 'hidden');
         if (tmp) { // custom getter already defined
@@ -176,6 +180,7 @@
 
 
     function disableVisibilityHook() {
+        clearTimeout(visibility_hook_timeout);
         visibility_hook_enabled = false;
     }
 
@@ -251,7 +256,7 @@
 
 
     function onNotifyWindowFocus() {
-        if (!document.hidden) document.querySelector('link[rel="icon"]').href = notify_icon_original;
+        if (document.visibilityState !== 'hidden') document.querySelector('link[rel="icon"]').href = notify_icon_original;
     }
 
 
@@ -309,7 +314,6 @@
             ffz.site.children.player.resetPlayer(ffz.site.children.player.current);
             setTimeout(playerCompressorCheck, 1000);
         } catch {}
-        setTimeout(disableVisibilityHook, 5000);
     }
 
 
@@ -345,7 +349,6 @@
         if (buttonPlay) {
             enableVisibilityHook();
             buttonPlay.click();
-            setTimeout(disableVisibilityHook, 5000);
             return true;
         }
         return false;
@@ -698,7 +701,7 @@
                                         }
                                         cloned_chat_line.appendChild(close_button);
                                         pinned_log.appendChild(cloned_chat_line);
-                                        if (document.hidden) document.querySelector('link[rel="icon"]').href = notify_icon;
+                                        if (document.visibilityState === 'hidden') document.querySelector('link[rel="icon"]').href = notify_icon;
                                     }
                                 }, 500);
                             }
@@ -715,6 +718,16 @@
 
 
     function setupHandlers() {
+        if (!handlers_already_attached['visibilitychange_handler']) {
+            handlers_already_attached['visibilitychange_handler'] = true;
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    enableVisibilityHook();
+                } else if (document.visibilityState === 'visible') {
+                    disableVisibilityHook();
+                }
+            }, true);
+        }
         if (!handlers_already_attached['reset_player_click_handler']) {
             handlers_already_attached['reset_player_click_handler'] = true;
             document.body.addEventListener('click', e => {
