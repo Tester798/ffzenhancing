@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.45';
+    let version = '6.46';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -38,7 +38,7 @@
     let current_player_quality;
     let added_styles = {};
     let visibility_hook_enabled = false;
-    let orig_visibilityStateProc = document.__lookupGetter__('visibilityState').bind(document);
+    let orig_visibilityStateProc;
     let visibility_hook_timeout;
     let onSinkPlaybackRateChanged_removed = false;
     let resetPlayerTimeout = false;
@@ -47,6 +47,21 @@
     let currentPlayerUserPaused = false;
     let prev_player_onStateChanged;
     let added_message_highlights = {};
+
+
+    function getPropertyDescriptor(o, p) {
+        let desc;
+        do {
+            desc = Object.getOwnPropertyDescriptor(o, p);
+            o = Object.getPrototypeOf(o);
+        } while(!desc);
+        return desc;
+    }
+    Object.prototype.__lookupGetter__ = function(p) {
+        let desc = getPropertyDescriptor(this, p);
+        return desc ? desc.get : undefined;
+    };
+    Object.defineProperty(Object.prototype, '__lookupGetter__', {enumerable: false});
 
 
     function replaceFunctions() {
@@ -169,24 +184,6 @@
         clearTimeout(visibility_hook_timeout);
         visibility_hook_timeout = setTimeout(disableVisibilityHook, ffzenhancing_visibility_hook_time * 1000);
         visibility_hook_enabled = true;
-
-        if (document.__lookupGetter__('visibilityState') !== visibilityStateHookProc) {
-            try {
-                Object.defineProperty(document, 'visibilityState', {
-                    configurable: true,
-                    get: visibilityStateHookProc
-                });
-            } catch {}
-        }
-
-        if (document.__lookupGetter__('hidden') !== hiddenHookProc) {
-            try {
-                Object.defineProperty(document, 'hidden', {
-                    configurable: true,
-                    get: hiddenHookProc
-                });
-            } catch {}
-        }
     }
 
 
@@ -731,6 +728,25 @@
     function setupHandlers() {
         if (!handlers_already_attached['visibilitychange_handler']) {
             handlers_already_attached['visibilitychange_handler'] = true;
+
+            orig_visibilityStateProc = document.__lookupGetter__('visibilityState').bind(document);
+            if (document.__lookupGetter__('visibilityState') !== visibilityStateHookProc) {
+                try {
+                    Object.defineProperty(document, 'visibilityState', {
+                        configurable: true,
+                        get: visibilityStateHookProc
+                    });
+                } catch {}
+            }
+            if (document.__lookupGetter__('hidden') !== hiddenHookProc) {
+                try {
+                    Object.defineProperty(document, 'hidden', {
+                        configurable: true,
+                        get: hiddenHookProc
+                    });
+                } catch {}
+            }
+
             let skip = false;
             window.addEventListener('visibilitychange', () => {
                 if (!skip) {
