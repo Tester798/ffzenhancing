@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.44';
+    let version = '6.45';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -731,12 +731,20 @@
     function setupHandlers() {
         if (!handlers_already_attached['visibilitychange_handler']) {
             handlers_already_attached['visibilitychange_handler'] = true;
-            document.addEventListener('visibilitychange', () => {
-                if (orig_visibilityStateProc() === 'hidden') {
-                    enableVisibilityHook();
-                } else if (orig_visibilityStateProc() === 'visible') {
-                    disableVisibilityHook();
+            let skip = false;
+            window.addEventListener('visibilitychange', () => {
+                if (!skip) {
+                    if (orig_visibilityStateProc() === 'hidden') {
+                        enableVisibilityHook();
+                        setTimeout(() => {
+                            skip = true;
+                            document.dispatchEvent(new Event('visibilitychange'));
+                        }, ffzenhancing_visibility_hook_time * 1000 + 1000);
+                    } else if (orig_visibilityStateProc() === 'visible') {
+                        disableVisibilityHook();
+                    }
                 }
+                skip = false;
             }, true);
         }
         if (!handlers_already_attached['reset_player_click_handler']) {
