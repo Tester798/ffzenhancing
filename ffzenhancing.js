@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.43';
+    let version = '6.44';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -38,7 +38,7 @@
     let current_player_quality;
     let added_styles = {};
     let visibility_hook_enabled = false;
-    let orig_visibilityStateProc;
+    let orig_visibilityStateProc = document.__lookupGetter__('visibilityState').bind(document);
     let visibility_hook_timeout;
     let onSinkPlaybackRateChanged_removed = false;
     let resetPlayerTimeout = false;
@@ -170,7 +170,6 @@
         visibility_hook_timeout = setTimeout(disableVisibilityHook, ffzenhancing_visibility_hook_time * 1000);
         visibility_hook_enabled = true;
 
-        if (orig_visibilityStateProc === undefined) orig_visibilityStateProc = document.__lookupGetter__('visibilityState').bind(document);
         if (document.__lookupGetter__('visibilityState') !== visibilityStateHookProc) {
             try {
                 Object.defineProperty(document, 'visibilityState', {
@@ -268,7 +267,7 @@
 
 
     function onNotifyWindowFocus() {
-        if (document.visibilityState !== 'hidden') document.querySelector('link[rel="icon"]').href = notify_icon_original;
+        if (orig_visibilityStateProc() !== 'hidden') document.querySelector('link[rel="icon"]').href = notify_icon_original;
     }
 
 
@@ -544,7 +543,7 @@
     function periodicCheckClaimBonus() {
         if (!ffzenhancing_auto_click_claim_bonus_points) return;
         let button = getElementByXpath('//button[.//div[contains(@class, "claimable-bonus__icon")]]');
-        if (button && document.visibilityState === 'visible') button.click();
+        if (button && orig_visibilityStateProc() === 'visible') button.click();
         if (timers['periodicCheckClaimBonus']) {
             clearTimeout(timers['periodicCheckClaimBonus']);
         }
@@ -713,7 +712,7 @@
                                         }
                                         cloned_chat_line.appendChild(close_button);
                                         pinned_log.appendChild(cloned_chat_line);
-                                        if (document.visibilityState === 'hidden') document.querySelector('link[rel="icon"]').href = notify_icon;
+                                        if (orig_visibilityStateProc() === 'hidden') document.querySelector('link[rel="icon"]').href = notify_icon;
                                     }
                                 }, 500);
                             }
@@ -733,9 +732,9 @@
         if (!handlers_already_attached['visibilitychange_handler']) {
             handlers_already_attached['visibilitychange_handler'] = true;
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'hidden') {
+                if (orig_visibilityStateProc() === 'hidden') {
                     enableVisibilityHook();
-                } else if (document.visibilityState === 'visible') {
+                } else if (orig_visibilityStateProc() === 'visible') {
                     disableVisibilityHook();
                 }
             }, true);
@@ -1153,9 +1152,7 @@
                             return val;
                         }
                     },
-                    changed: val => {
-                        ffzenhancing_visibility_hook_time = val;
-                    }
+                    changed: val => ffzenhancing_visibility_hook_time = val
                 });
 
 
