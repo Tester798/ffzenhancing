@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.46';
+    let version = '6.47';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -57,11 +57,11 @@
         } while(!desc);
         return desc;
     }
-    Object.prototype.__lookupGetter__ = function(p) {
+    Object.prototype.__mylookupGetter__ = function(p) {
         let desc = getPropertyDescriptor(this, p);
         return desc ? desc.get : undefined;
     };
-    Object.defineProperty(Object.prototype, '__lookupGetter__', {enumerable: false});
+    Object.defineProperty(Object.prototype, '__mylookupGetter__', {enumerable: false});
 
 
     function replaceFunctions() {
@@ -729,22 +729,29 @@
         if (!handlers_already_attached['visibilitychange_handler']) {
             handlers_already_attached['visibilitychange_handler'] = true;
 
-            orig_visibilityStateProc = document.__lookupGetter__('visibilityState').bind(document);
-            if (document.__lookupGetter__('visibilityState') !== visibilityStateHookProc) {
-                try {
-                    Object.defineProperty(document, 'visibilityState', {
-                        configurable: true,
-                        get: visibilityStateHookProc
-                    });
-                } catch {}
-            }
-            if (document.__lookupGetter__('hidden') !== hiddenHookProc) {
-                try {
-                    Object.defineProperty(document, 'hidden', {
-                        configurable: true,
-                        get: hiddenHookProc
-                    });
-                } catch {}
+            orig_visibilityStateProc = document.__mylookupGetter__('visibilityState');            
+            if (orig_visibilityStateProc !== undefined) {
+                orig_visibilityStateProc = orig_visibilityStateProc.bind(document);
+                if (document.__mylookupGetter__('visibilityState') !== visibilityStateHookProc) {
+                    try {
+                        Object.defineProperty(document, 'visibilityState', {
+                            configurable: true,
+                            get: visibilityStateHookProc
+                        });
+                    } catch {}
+                }
+                if (document.__mylookupGetter__('hidden') !== hiddenHookProc) {
+                    try {
+                        Object.defineProperty(document, 'hidden', {
+                            configurable: true,
+                            get: hiddenHookProc
+                        });
+                    } catch {}
+                }
+            } else {
+                orig_visibilityStateProc = () => {
+                    return document.visibilityState;
+                };
             }
 
             let skip = false;
