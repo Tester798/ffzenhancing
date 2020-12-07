@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.48';
+    let version = '6.49';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -40,13 +40,14 @@
     let visibility_hook_enabled = false;
     let orig_visibilityStateProc;
     let visibility_hook_timeout;
-    let onSinkPlaybackRateChanged_removed = false;
     let resetPlayerTimeout = false;
     let compressPlayerOrigFunc;
     let compressPlayerWanted;
     let currentPlayerUserPaused = false;
     let prev_player_onStateChanged;
     let added_message_highlights = {};
+    let playbackRate_set_by_us = false;
+    let orig_playbackRate_set;
 
 
     function getPropertyDescriptor(o, p) {
@@ -57,9 +58,9 @@
         } while(!desc);
         return desc;
     }
-    Object.prototype.__mylookupGetter__ = function(p) {
+    Object.prototype.__mylookupGetter__ = function(p, return_set) {
         let desc = getPropertyDescriptor(this, p);
-        return desc ? desc.get : undefined;
+        return desc ? (return_set ? desc.set : desc.get) : undefined;
     };
     Object.defineProperty(Object.prototype, '__mylookupGetter__', {enumerable: false});
 
@@ -192,6 +193,12 @@
         clearTimeout(visibility_hook_timeout);
         visibility_hook_enabled = false;
     }
+
+
+    function playbackRateSetHook(rate) {
+        if (!playbackRate_set_by_us) return rate;
+        return orig_playbackRate_set.call(this, rate);
+    };
 
 
     function highlightMessage(username) {
@@ -474,14 +481,18 @@
 
 
     function increasePlayerPlaybackSpeed(video) {
+        playbackRate_set_by_us = true;
         video.playbackRate = ffzenhancing_keep_delay_low_rate;
+        playbackRate_set_by_us = false;
         ffzenhancing_keep_delay_low_latency_was_changed = true;
     }
 
 
     function resetPlayerPlaybackSpeed(video) {
         if (ffzenhancing_keep_delay_low_latency_was_changed) {
+            playbackRate_set_by_us = true;
             video.playbackRate = 1;
+            playbackRate_set_by_us = false;
             ffzenhancing_keep_delay_low_latency_was_changed = false;
         }
     }
@@ -497,18 +508,6 @@
                     || (ffz.site.children.player.current.core && ffz.site.children.player.current.core.stats && ffz.site.children.player.current.core.stats.broadcasterLatency);
             } catch {}
             if (liveLatency !== undefined) {
-                if (!onSinkPlaybackRateChanged_removed) {
-                    try {
-                        ffz.site.children.player.current.setLiveSpeedUpRate(1);
-                        const mediaSinkManager = ffz.site.children.player.current.mediaSinkManager || (ffz.site.children.player.current.core && ffz.site.children.player.current.core.mediaSinkManager);
-                        mediaSinkManager.getCurrentSink().listener.onSinkPlaybackRateChanged = () => {};
-
-                        ffz.site.children.player.current.setPlaybackRate(1);
-                        ffz.site.children.player.current.setPlaybackRate = () => {};
-
-                        onSinkPlaybackRateChanged_removed = true;
-                    } catch {}
-                }
                 if (ffzenhancing_reset_after_delay) {
                     if (liveLatency > ffzenhancing_reset_after_delay_delay) {
                         ffzResetPlayer();
@@ -727,6 +726,21 @@
 
 
     function setupHandlers() {
+        if (!handlers_already_attached['playbackrate_handler']) {
+            handlers_already_attached['playbackrate_handler'] = true;
+
+            orig_playbackRate_set = HTMLVideoElement.prototype.__mylookupGetter__('playbackRate', true);
+            if (orig_playbackRate_set !== undefined) {
+                if (orig_playbackRate_set !== playbackRateSetHook) {
+                    try {
+                        Object.defineProperty(HTMLVideoElement.prototype, 'playbackRate', {
+                            set: playbackRateSetHook,
+                            get: HTMLVideoElement.prototype.__mylookupGetter__('playbackRate')
+                        });
+                    } catch {}
+                }
+            }
+        }
         if (!handlers_already_attached['visibilitychange_handler']) {
             handlers_already_attached['visibilitychange_handler'] = true;
 
