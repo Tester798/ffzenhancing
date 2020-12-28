@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.49';
+    let version = '6.50';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -409,7 +409,7 @@
 
     function playerCompressorCheck() {
         if (!ffzenhancing_auto_check_player_compressor) return;
-        if (compressPlayerOrigFunc === undefined) {
+        if (ffz.site.children.player.compressPlayer !== compressPlayerHook) {
             compressPlayerOrigFunc = ffz.site.children.player.compressPlayer;
             ffz.site.children.player.compressPlayer = compressPlayerHook;
         }
