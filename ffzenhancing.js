@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.50';
+    let version = '6.51';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -41,7 +41,6 @@
     let orig_visibilityStateProc;
     let visibility_hook_timeout;
     let resetPlayerTimeout = false;
-    let compressPlayerOrigFunc;
     let compressPlayerWanted;
     let currentPlayerUserPaused = false;
     let prev_player_onStateChanged;
@@ -276,18 +275,6 @@
     }
 
 
-    function compressPlayerHook(inst, e) {
-        if (ffzenhancing_auto_check_player_compressor) {
-            if (compressPlayerWanted === undefined) compressPlayerWanted = this.settings.get('player.compressor.default');
-            if (e !== undefined) {
-                let video = getVideoLiveAndNotPaused();
-                if (video) compressPlayerWanted = !video._ffz_compressed;
-            }
-        }
-        compressPlayerOrigFunc.call(ffz.site.children.player, inst, e);
-    }
-
-
     function getCurrentPlayerState() {
         current_player_volume = undefined;
         current_player_muted = undefined;
@@ -407,21 +394,32 @@
     }
 
 
+    function compressPlayerChange() {
+        try {
+            let video = getVideoLiveAndNotPaused();
+            if (video) compressPlayerWanted = !video._ffz_compressed;
+        } catch {}
+    }
+
+
     function playerCompressorCheck() {
         if (!ffzenhancing_auto_check_player_compressor) return;
-        if (ffz.site.children.player.compressPlayer !== compressPlayerHook) {
-            compressPlayerOrigFunc = ffz.site.children.player.compressPlayer;
-            ffz.site.children.player.compressPlayer = compressPlayerHook;
-        }
         if (timers['playerCompressorCheck']) {
             clearTimeout(timers['playerCompressorCheck']);
         }
+
+        try {
+            let btn = ffz.site.children.player.Player.first.props.containerRef.querySelector('.ffz--player-comp button');
+            if (!btn.__ffz_enhancing_installed) {
+                btn.addEventListener('click', compressPlayerChange, true);
+                btn.__ffz_enhancing_installed = true;
+            }
+        } catch {}
+
         try {
             let video = getVideoLiveAndNotPaused();
-            if (video) {
-                if (compressPlayerWanted !== undefined && compressPlayerWanted !== !!video._ffz_compressed) {
-                    compressPlayerOrigFunc.call(ffz.site.children.player, ffz.site.children.player.Player.first, document.createEvent('Event'));
-                }
+            if (video && compressPlayerWanted !== undefined && compressPlayerWanted !== !!video._ffz_compressed) {
+                ffz.site.children.player.compressPlayer.call(ffz.site.children.player, ffz.site.children.player.Player.first, document.createEvent('Event'));
             }
         } catch {}
         timers['playerCompressorCheck'] = setTimeout(playerCompressorCheck, 5000);
