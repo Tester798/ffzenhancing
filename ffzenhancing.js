@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.51';
+    let version = '6.52';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -195,7 +195,9 @@
 
 
     function playbackRateSetHook(rate) {
-        if (!playbackRate_set_by_us) return rate;
+        try {
+            if (ffzenhancing_keep_delay_low && !playbackRate_set_by_us && ffz.site.router.current.name == 'user') return rate;
+        } catch {}
         return orig_playbackRate_set.call(this, rate);
     };
 
