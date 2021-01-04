@@ -1,5 +1,7 @@
 // ==UserScript==
 // @name Userscript loader for The FFZ Enhancing Add-On
+// @version 1.0
+// @author Tester798
 // @description Allows you to use The FFZ Enhancing Add-On as a userscript
 // @icon https://tester798.github.io/ffzenhancing/images/icon128.png
 // @match *://*.twitch.tv/*
