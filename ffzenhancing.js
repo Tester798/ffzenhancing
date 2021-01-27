@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.52';
+    let version = '6.53';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -568,14 +568,19 @@
             }
             if (el && appendEl) {
                 el = el.parentNode;
-                // let nodeBefore = null;
-                // if (ffzenhancing_move_users_in_chat_to_bottom) {
-                //     nodeBefore = appendEl.querySelector(':scope > div:nth-child(1)');
-                // }
-                // el.parentNode.removeChild(el);
-                // appendEl.insertBefore(el, nodeBefore);
                 el.parentNode.removeChild(el);
                 appendEl.prepend(el);
+
+                if (ffzenhancing_move_users_in_chat_to_bottom) {
+                    addStyleToSite('ffzenhancing_move_users_in_chat_to_bottom', `
+                        [data-test-selector="chat-input-buttons-container"] .tw-balloon[role="dialog"] {
+                            margin-left: -30px;
+                        }
+                    `);
+                } else {
+                    removeStyleFromSite('ffzenhancing_move_users_in_chat_to_bottom');
+                }
+
                 let tooltip = el.querySelector('.tw-tooltip');
                 if (tooltip) {
                     if (ffzenhancing_move_users_in_chat_to_bottom) {
