@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.53';
+    let version = '6.54';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -823,8 +823,9 @@
                 if (ffzenhancing_fix_tooltips) {
                     setTimeout(() => {
                         let el = document.querySelector('.ffz__tooltip');
-                        if (!el) return;
-                        el.parentNode.removeChild(el);
+                        if (el) el.parentNode.removeChild(el);
+                        el = document.querySelector('.tw-tooltip-layer');
+                        if (el) el.parentNode.removeChild(el);
                     });
                 }
             });
@@ -1042,8 +1043,8 @@
                     default: false,
                     ui: {
                         path: 'Add-Ons > FFZ Enhancing Add-On >> Other Settings',
-                        title: 'Fix FFZ Tooltips',
-                        description: 'Hide Hanged FFZ Tooltips on Mouse Click.',
+                        title: 'Fix Hanged Tooltips',
+                        description: 'Hide hanged tooltips on mouse click.',
                         component: 'setting-check-box',
                     },
                     changed: val => {
