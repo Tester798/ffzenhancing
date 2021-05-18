@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.54';
+    let version = '6.55';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -32,7 +32,6 @@
     let timers = {};
     let timeoutShowCard;
     let ignore_next_event = false;
-    let element_users_in_chat;
     let current_player_volume;
     let current_player_muted;
     let current_player_quality;
@@ -560,11 +559,11 @@
         // ffzenhancing_move_users_in_chat_to_bottom
         if (!window.location.href.endsWith('/squad')) {
             if (ffzenhancing_move_users_in_chat_to_bottom) {
-                el = element_users_in_chat || document.querySelector('.stream-chat-header button[data-test-selector="chat-viewer-list"]');
-                appendEl = document.querySelector('.chat-input__buttons-container > .tw-flex:first-child');
+                el = document.querySelector('.stream-chat-header button[data-test-selector="chat-viewer-list"]');
+                appendEl = document.querySelector('.chat-input__buttons-container > div:first-child');
             } else {
-                el = element_users_in_chat || document.querySelector('.chat-input__buttons-container button[data-test-selector="chat-viewer-list"]');
-                appendEl = document.querySelector('.stream-chat-header > .tw-absolute');
+                el = document.querySelector('.chat-input__buttons-container button[data-test-selector="chat-viewer-list"]');
+                appendEl = document.querySelector('.stream-chat-header > div:last-child');
             }
             if (el && appendEl) {
                 el = el.parentNode;
@@ -582,17 +581,23 @@
                 }
 
                 let tooltip = el.querySelector('.tw-tooltip');
-                if (tooltip) {
+                if (tooltip && tooltip.id) {
                     if (ffzenhancing_move_users_in_chat_to_bottom) {
-                        tooltip.classList.remove('tw-tooltip--down');
-                        tooltip.classList.remove('tw-tooltip--align-right');
-                        tooltip.classList.add('tw-tooltip--up');
-                        tooltip.classList.add('tw-tooltip--align-left');
+                        addStyleToSite('ffzenhancing_move_users_in_chat_to_bottom_tooltip', `
+                            [id="${tooltip.id}"] {
+                                top: unset;
+                                bottom: 100%;
+                                margin-top: unset;
+                                margin-bottom: 6px;
+                            }
+
+                            [id="${tooltip.id}"]::after {
+                                top: unset;
+                                bottom: -3px;
+                            }
+                        `);
                     } else {
-                        tooltip.classList.remove('tw-tooltip--up');
-                        tooltip.classList.remove('tw-tooltip--align-left');
-                        tooltip.classList.add('tw-tooltip--down');
-                        tooltip.classList.add('tw-tooltip--align-right');
+                        removeStyleFromSite('ffzenhancing_move_users_in_chat_to_bottom_tooltip');
                     }
                 }
             }
