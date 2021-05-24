@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.55';
+    let version = '6.56';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -203,7 +203,8 @@
 
     function highlightMessage(username) {
         const style = addStyleToSite('highlight_' + username, `
-            .chat-line__message[data-user="${username}"] {
+            .ffz-notice-line[data-user="${username}"],
+            .chat-line__message:not(.chat-line--inline)[data-user="${username}"] {
                 background-color: #a50000;
             }
         `);
