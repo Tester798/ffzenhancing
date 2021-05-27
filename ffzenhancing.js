@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.56';
+    let version = '6.57';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -378,17 +378,20 @@
     }
 
 
-    function playerQualityCheck(ignore_check) {
-        if (!ignore_check && !ffzenhancing_auto_check_player_quality) return;
+    function playerQualityCheck() {
+        if (!ffzenhancing_auto_check_player_quality) return;
         if (timers['playerQualityCheck']) {
             clearTimeout(timers['playerQualityCheck']);
         }
         if (document.visibilityState !== 'hidden') {
             try {
                 let def_quality = JSON.parse(window.localStorage.getItem('video-quality')).default;
-                let player_quality = ffz.site.children.player.current.getQualities().find(q => q.group == def_quality);
-                if (player_quality) {
-                    ffz.site.children.player.current.setQuality(player_quality);
+                let cur_quality = ffz.site.children.player.current.getQuality().group;
+                if (def_quality != cur_quality) {
+                    let new_quality = ffz.site.children.player.current.getQualities().find(q => q.group == def_quality);
+                    if (new_quality) {
+                        ffz.site.children.player.current.setQuality(new_quality);
+                    }
                 }
             } catch {}
         }
