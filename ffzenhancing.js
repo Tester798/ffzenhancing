@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.58';
+    let version = '6.59';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -861,7 +861,7 @@
                             if (clicked_username.startsWith('@'))
                                 clicked_username = clicked_username.substr(1);
                             setTimeout(() => {
-                                let card = document.querySelector('.chat-room__viewer-card');
+                                let card = document.querySelector('[data-a-target="viewer-card"]');
                                 if (card) {
                                     highlightMessage(clicked_username);
                                     let card_close = card.querySelector('[data-a-target="viewer-card-close-button"]');
