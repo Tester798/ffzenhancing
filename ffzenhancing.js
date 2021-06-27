@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.59';
+    let version = '6.60';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -387,10 +387,17 @@
         if (document.visibilityState !== 'hidden') {
             try {
                 let def_quality = JSON.parse(window.localStorage.getItem('video-quality')).default;
-                let cur_quality = ffz.site.children.player.current.getQuality().group;
-                if (def_quality != cur_quality) {
+                let cur_quality = ffz.site.children.player.current.getQuality();
+                if (def_quality != cur_quality.group) {
                     let new_quality = ffz.site.children.player.current.getQualities().find(q => q.group == def_quality);
-                    if (new_quality) {
+                    if (!new_quality) {
+                        let height_def = def_quality.substring(0, def_quality.indexOf('p'));
+                        let height_cur = cur_quality.height;
+                        if (height_def && height_def != height_cur) {
+                            new_quality = ffz.site.children.player.current.getQualities().find(q => q.height <= height_def);
+                        }
+                    }
+                    if (new_quality && new_quality.group != cur_quality.group) {
                         ffz.site.children.player.current.setQuality(new_quality);
                     }
                 }
