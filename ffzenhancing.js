@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.61';
+    let version = '6.62';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -26,6 +26,7 @@
     let ffzenhancing_auto_click_claim_bonus_points;
     let ffzenhancing_fix_emote_select;
     let ffzenhancing_highlight_user_messages;
+    let ffzenhancing_fix_addon_load;
     let ffzenhancing_visibility_hook_time;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
@@ -53,17 +54,46 @@
         do {
             desc = Object.getOwnPropertyDescriptor(o, p);
             o = Object.getPrototypeOf(o);
-        } while(!desc);
+        } while (!desc);
         return desc;
     }
     Object.prototype.__mylookupGetter__ = function(p, return_set) {
         let desc = getPropertyDescriptor(this, p);
         return desc ? (return_set ? desc.set : desc.get) : undefined;
     };
-    Object.defineProperty(Object.prototype, '__mylookupGetter__', {enumerable: false});
+    Object.defineProperty(Object.prototype, '__mylookupGetter__', {
+        enumerable: false
+    });
 
 
     function replaceFunctions() {
+        if (ffzenhancing_fix_addon_load) {
+            ffz.addons.loadAddon = async function(id) {
+                const addon = this.getAddon(id);
+                if (!addon)
+                    throw new Error(`Unknown add-on id: ${id}`);
+                let module = this.resolve(`addon.${id}`);
+                if (module) {
+                    if (!module.loaded)
+                        await module.load();
+                    this.emit(':addon-loaded', id);
+                    return;
+                }
+                const el = ffz.constructor.utilities.dom.createElement('script', {
+                    id: `ffz-loaded-addon-${addon.id}`,
+                    type: 'text/javascript',
+                    src: addon.src || `${addon.dev ? 'https://localhost:8001' : ffz.constructor.utilities.constants.SERVER}/script/addons/${addon.id}/script.js?_=${ffz.constructor.utilities.time.getBuster(30)}`,
+                    crossorigin: 'anonymous'
+                });
+                document.head.appendChild(el);
+                await this.waitFor(`addon.${id}:registered`);
+                module = this.resolve(`addon.${id}`);
+                if (module && !module.loaded)
+                    await module.load();
+                this.emit(':addon-loaded', id);
+            };
+        }
+
         ffz.site.children.chat.ChatBuffer.ready((cls, instances) => {
             const t = ffz.site.children.chat;
             const old_mount = cls.prototype.componentDidMount;
@@ -85,7 +115,7 @@
                 const inst = this;
                 const handler = inst.props.messageHandlerAPI;
                 if (handler) {
-                    if (inst.handleMessage === undefined) {                            
+                    if (inst.handleMessage === undefined) {
                         handler.addMessageHandler(my_handleMessage);
                     } else {
                         const orig_handleMessage = inst.handleMessage;
@@ -94,7 +124,7 @@
                         handler.addMessageHandler(orig_handleMessage);
                     }
                 }
-                
+
                 function my_handleMessage(msg) {
                     if (msg) {
                         try {
@@ -138,7 +168,7 @@
                     inst.__ffz_enhancingInstall();
                 } catch {}
             }
-        });        
+        });
     }
 
 
@@ -173,11 +203,11 @@
         return orig_visibilityStateProc();
     }
 
-    
+
     function hiddenHookProc() {
         if (document.pictureInPictureElement != null) return false;
         return document.visibilityState === 'hidden';
-    }    
+    }
 
 
     function enableVisibilityHook() {
@@ -437,7 +467,7 @@
             }
         } catch {}
         timers['playerCompressorCheck'] = setTimeout(playerCompressorCheck, 5000);
-    }    
+    }
 
 
     function error_2000_check() {
@@ -515,9 +545,9 @@
         if (video) {
             let liveLatency;
             try {
-                liveLatency = (ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.liveLatency)
-                    || (ffz.site.children.player.current.stats && ffz.site.children.player.current.stats.broadcasterLatency)
-                    || (ffz.site.children.player.current.core && ffz.site.children.player.current.core.stats && ffz.site.children.player.current.core.stats.broadcasterLatency);
+                liveLatency = (ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.liveLatency) ||
+                    (ffz.site.children.player.current.stats && ffz.site.children.player.current.stats.broadcasterLatency) ||
+                    (ffz.site.children.player.current.core && ffz.site.children.player.current.core.stats && ffz.site.children.player.current.core.stats.broadcasterLatency);
             } catch {}
             if (liveLatency !== undefined) {
                 if (ffzenhancing_reset_after_delay) {
@@ -650,7 +680,7 @@
             addStyleToSite('ffzenhancing_fix_emote_select', '.ffz--inline {display: inline-block;}');
         } else {
             removeStyleFromSite('ffzenhancing_fix_emote_select');
-        }        
+        }
 
         // ffzenhancing_animate_static_gif_emotes_on_mouse_hover
         if (ffzenhancing_animate_static_gif_emotes_on_mouse_hover) {
@@ -767,7 +797,7 @@
         if (!handlers_already_attached['visibilitychange_handler']) {
             handlers_already_attached['visibilitychange_handler'] = true;
 
-            orig_visibilityStateProc = document.__mylookupGetter__('visibilityState');            
+            orig_visibilityStateProc = document.__mylookupGetter__('visibilityState');
             if (orig_visibilityStateProc !== undefined) {
                 orig_visibilityStateProc = orig_visibilityStateProc.bind(document);
                 if (document.__mylookupGetter__('visibilityState') !== visibilityStateHookProc) {
@@ -1132,6 +1162,16 @@
                     },
                     changed: val => ffzenhancing_highlight_user_messages = val
                 });
+                this.settings.add('ffzenhancing.fix_addon_load', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Other Settings',
+                        title: 'Fix Add-On Load',
+                        description: 'Wait indefinitely for add-ons to load. May fix missing BetterTTV emotes.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => ffzenhancing_fix_addon_load = val
+                });
 
 
                 // Player
@@ -1252,6 +1292,7 @@
                 ffzenhancing_fix_emote_select = this.settings.get('ffzenhancing.fix_emote_select');
                 ffzenhancing_highlight_user_messages = this.settings.get('ffzenhancing.highlight_user_messages');
                 ffzenhancing_visibility_hook_time = this.settings.get('ffzenhancing.visibility_hook_time');
+                ffzenhancing_fix_addon_load = this.settings.get('ffzenhancing.fix_addon_load');
                 schedulePeriodicCheckVideoInfo();
                 setupHandlers();
                 error_2000_check();
