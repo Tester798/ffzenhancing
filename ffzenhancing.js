@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.63';
+    let version = '6.64';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -158,13 +158,16 @@
                                     shouldDelay: false
                                 });
                                 if (mod_action === mod_types.Timeout || mod_action === mod_types.Ban) {
-                                    inst.buffer.filter(el => (el.modActionType === 'timeout' || el.modActionType === 'ban') && el.roomLogin === msg.roomLogin).forEach(el => {
-                                        el.modActionType = msg.moderationActionType;
-                                        el.duration = msg.duration;
-                                        el.banned = true;
-                                        el.deleted = true;
-                                    });
-                                    ffz.site.children.chat.chat_line.rerenderLines();
+                                    for (const line of ffz.site.children.chat.chat_line.ChatLine.instances) {
+                                        const m = line.props.message;
+                                        if (m.user.userLogin === msg.userLogin && (m.modActionType === 'timeout' || m.modActionType === 'ban' || m.modActionType === 'delete')) {
+                                            m.modActionType = msg.moderationActionType;
+                                            m.duration = msg.duration;
+                                            m.banned = true;
+                                            m.deleted = true;
+                                            line.forceUpdate();
+                                        }
+                                    }
                                 }
                             }
                         } catch {}
