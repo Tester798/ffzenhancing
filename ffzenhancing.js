@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.62';
+    let version = '6.63';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -157,6 +157,15 @@
                                     time: Date.now(),
                                     shouldDelay: false
                                 });
+                                if (mod_action === mod_types.Timeout || mod_action === mod_types.Ban) {
+                                    inst.buffer.filter(el => (el.modActionType === 'timeout' || el.modActionType === 'ban') && el.roomLogin === msg.roomLogin).forEach(el => {
+                                        el.modActionType = msg.moderationActionType;
+                                        el.duration = msg.duration;
+                                        el.banned = true;
+                                        el.deleted = true;
+                                    });
+                                    ffz.site.children.chat.chat_line.rerenderLines();
+                                }
                             }
                         } catch {}
                     }
