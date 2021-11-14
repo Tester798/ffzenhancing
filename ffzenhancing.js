@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.65';
+    let version = '6.66';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -28,6 +28,7 @@
     let ffzenhancing_highlight_user_messages;
     let ffzenhancing_fix_addon_load;
     let ffzenhancing_visibility_hook_time;
+    let ffzenhancing_fix_video_freeze_on_tab_change;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
     let timers = {};
@@ -552,6 +553,38 @@
     }
 
 
+    function checkDroppedFrames(obj) {
+        try {
+            const fluc_mul = 0.6;
+            const sample_time = 1000;
+            const start_delay = 100;
+            if (obj === undefined) obj = {};
+
+            if (obj.tries > 20) return;
+            const fps = ffz.site.children.player.current.getVideoFrameRate();
+            if (fps === 0 || fps > 70) return setTimeout(checkDroppedFrames, 100, {
+                tries: (obj.tries || 0) + 1
+            });
+
+            if (obj.prev_value === undefined) return setTimeout(() => {
+                const prev_value = ffz.site.children.player.current.getDroppedFrames();
+                setTimeout(checkDroppedFrames, sample_time, {
+                    prev_value
+                });
+            }, start_delay);
+
+            const prev_value = obj.prev_value;
+            const cur_value = ffz.site.children.player.current.getDroppedFrames();
+            const playbackRate = ffz.site.children.player.current.getPlaybackRate();
+            const isDropping = cur_value >= prev_value + fluc_mul * fps * playbackRate * sample_time / 1000;
+            if (isDropping) {
+                ffz.site.children.player.current.pause();
+                ffz.site.children.player.current.play();
+            }
+        } catch {}
+    }
+
+
     function periodicCheckVideoInfo() {
         const video = getVideoLiveAndNotPaused();
         if (video) {
@@ -787,17 +820,6 @@
                 }
             }
         }
-
-        // Fix FFZ not entering theatre mode sometimes
-        try {
-            if (
-                ffz.site.router.current.name == 'user' &&
-                ffz.settings.get('player.theatre.auto-enter') &&
-                !ffz.site.children.player.TheatreHost.first.props.theatreModeEnabled
-            ) {
-                ffz.site.children.player.TheatreHost.first.props.onTheatreModeEnabled();
-            }
-        } catch {}
     }
 
 
@@ -847,6 +869,10 @@
 
             let skip = false;
             window.addEventListener('visibilitychange', () => {
+                if (ffzenhancing_fix_video_freeze_on_tab_change && orig_visibilityStateProc() === 'visible') {
+                    const video = getVideoLiveAndNotPaused();
+                    if (video !== false) checkDroppedFrames();
+                }
                 if (!skip) {
                     if (orig_visibilityStateProc() === 'hidden') {
                         enableVisibilityHook();
@@ -956,6 +982,20 @@
                 }
             });
         }
+    }
+
+
+    function ffzenhancingInit() {
+        // Fix FFZ not entering theatre mode sometimes
+        try {
+            if (
+                ffz.site.router.current.name == 'user' &&
+                ffz.settings.get('player.theatre.auto-enter') &&
+                !ffz.site.children.player.TheatreHost.first.props.theatreModeEnabled
+            ) {
+                ffz.site.children.player.TheatreHost.first.props.onTheatreModeEnabled();
+            }
+        } catch {}
     }
 
 
@@ -1287,6 +1327,18 @@
                     },
                     changed: val => ffzenhancing_visibility_hook_time = val
                 });
+                this.settings.add('ffzenhancing.fix_video_freeze_on_tab_change', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Player',
+                        title: 'Fix Video Freeze on Tab Change',
+                        description: 'Unfreeze video after switching browser tab.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => {
+                        ffzenhancing_fix_video_freeze_on_tab_change = val;
+                    }
+                });
 
 
                 this.enable();
@@ -1316,6 +1368,7 @@
                 ffzenhancing_highlight_user_messages = this.settings.get('ffzenhancing.highlight_user_messages');
                 ffzenhancing_visibility_hook_time = this.settings.get('ffzenhancing.visibility_hook_time');
                 ffzenhancing_fix_addon_load = this.settings.get('ffzenhancing.fix_addon_load');
+                ffzenhancing_fix_video_freeze_on_tab_change = this.settings.get('ffzenhancing.fix_video_freeze_on_tab_change');
                 schedulePeriodicCheckVideoInfo();
                 setupHandlers();
                 error_2000_check();
@@ -1328,6 +1381,7 @@
                 this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
                 this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
                 this.site.children.player.PlayerSource.on('update', playerMount, this);
+                ffzenhancingInit();
             }
         }
         FFZEnhancingAddOn.register('ffz-enhancing-addon');
