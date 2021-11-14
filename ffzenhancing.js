@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.66';
+    let version = '6.67';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -555,28 +555,36 @@
 
     function checkDroppedFrames(obj) {
         try {
-            const fluc_mul = 0.6;
-            const sample_time = 1000;
-            const start_delay = 100;
+            if (!ffzenhancing_fix_video_freeze_on_tab_change || orig_visibilityStateProc() !== 'visible') return;
+
+            const max_tries = 40;
+            const try_interval = 100;
+            const detect_time = 500;
+
             if (obj === undefined) obj = {};
+            if (obj.tries > max_tries) return;
 
-            if (obj.tries > 20) return;
-            const fps = ffz.site.children.player.current.getVideoFrameRate();
-            if (fps === 0 || fps > 70) return setTimeout(checkDroppedFrames, 100, {
-                tries: (obj.tries || 0) + 1
-            });
+            const cur_decoded_frames = ffz.site.children.player.current.getDecodedFrames();
+            const cur_dropped_frames = ffz.site.children.player.current.getDroppedFrames();
 
-            if (obj.prev_value === undefined) return setTimeout(() => {
-                const prev_value = ffz.site.children.player.current.getDroppedFrames();
-                setTimeout(checkDroppedFrames, sample_time, {
-                    prev_value
-                });
-            }, start_delay);
+            if (!obj.done) {
+                const new_obj = {
+                    prev_decoded_frames: cur_decoded_frames,
+                    prev_dropped_frames: cur_dropped_frames,
+                };
+                if (
+                    obj.prev_decoded_frames === undefined ||
+                    obj.prev_decoded_frames === cur_decoded_frames
+                ) {
+                    new_obj.tries = (obj.tries || 0) + 1;
+                    return setTimeout(checkDroppedFrames, try_interval, new_obj);
+                } else {
+                    new_obj.done = true;
+                    return setTimeout(checkDroppedFrames, detect_time, new_obj);
+                }
+            }
 
-            const prev_value = obj.prev_value;
-            const cur_value = ffz.site.children.player.current.getDroppedFrames();
-            const playbackRate = ffz.site.children.player.current.getPlaybackRate();
-            const isDropping = cur_value >= prev_value + fluc_mul * fps * playbackRate * sample_time / 1000;
+            const isDropping = cur_dropped_frames - obj.prev_dropped_frames === cur_decoded_frames - obj.prev_decoded_frames;
             if (isDropping) {
                 ffz.site.children.player.current.pause();
                 ffz.site.children.player.current.play();
@@ -869,11 +877,11 @@
 
             let skip = false;
             window.addEventListener('visibilitychange', () => {
-                if (ffzenhancing_fix_video_freeze_on_tab_change && orig_visibilityStateProc() === 'visible') {
-                    const video = getVideoLiveAndNotPaused();
-                    if (video !== false) checkDroppedFrames();
-                }
                 if (!skip) {
+                    if (ffzenhancing_fix_video_freeze_on_tab_change && orig_visibilityStateProc() === 'visible') {
+                        const video = getVideoLiveAndNotPaused();
+                        if (video !== false) checkDroppedFrames();
+                    }
                     if (orig_visibilityStateProc() === 'hidden') {
                         enableVisibilityHook();
                         setTimeout(() => {
