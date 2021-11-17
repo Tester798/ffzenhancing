@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.67';
+    let version = '6.68';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -33,7 +33,7 @@
     let handlers_already_attached = {};
     let timers = {};
     let timeoutShowCard;
-    let ignore_next_event = false;
+    let ignore_next_click_event = false;
     let current_player_volume;
     let current_player_muted;
     let current_player_quality;
@@ -244,7 +244,8 @@
     };
 
 
-    function highlightMessage(username) {
+    function highlightMessages(username) {
+        if (!username) return;
         const style = addStyleToSite('highlight_' + username, `
             .ffz-notice-line[data-user="${username}"],
             .chat-line__message:not(.chat-line--inline)[data-user="${username}"] {
@@ -553,7 +554,7 @@
     }
 
 
-    function checkDroppedFrames(obj) {
+    function checkDroppingFrames(obj) {
         try {
             if (!ffzenhancing_fix_video_freeze_on_tab_change || orig_visibilityStateProc() !== 'visible') return;
 
@@ -577,10 +578,10 @@
                     obj.prev_decoded_frames === cur_decoded_frames
                 ) {
                     new_obj.tries = (obj.tries || 0) + 1;
-                    return setTimeout(checkDroppedFrames, try_interval, new_obj);
+                    return setTimeout(checkDroppingFrames, try_interval, new_obj);
                 } else {
                     new_obj.done = true;
-                    return setTimeout(checkDroppedFrames, detect_time, new_obj);
+                    return setTimeout(checkDroppingFrames, detect_time, new_obj);
                 }
             }
 
@@ -880,7 +881,7 @@
                 if (!skip) {
                     if (ffzenhancing_fix_video_freeze_on_tab_change && orig_visibilityStateProc() === 'visible') {
                         const video = getVideoLiveAndNotPaused();
-                        if (video !== false) checkDroppedFrames();
+                        if (video !== false) checkDroppingFrames();
                     }
                     if (orig_visibilityStateProc() === 'hidden') {
                         enableVisibilityHook();
@@ -939,55 +940,54 @@
             handlers_already_attached['ffzenhancing_doubleclick_username_paste_in_chat'] = true;
             document.body.addEventListener('click', e => {
                 if (!ffzenhancing_doubleclick_username_paste_in_chat) return;
-                if (ignore_next_event) {
-                    ignore_next_event = false;
+                if (!usernameElementClicked(e.target)) return;
+                if (ignore_next_click_event) {
+                    ignore_next_click_event = false;
                     return;
                 }
-                if (usernameElementClicked(e.target)) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    clearTimeout(timeoutShowCard);
-                    timeoutShowCard = setTimeout(() => {
-                        ignore_next_event = true;
-                        e.target.click();
-
-                        if (ffzenhancing_highlight_user_messages) {
-                            let clicked_username = e.target.innerText.toLowerCase();
-                            if (clicked_username.startsWith('@'))
-                                clicked_username = clicked_username.substr(1);
-                            setTimeout(() => {
-                                let card = document.querySelector('[data-a-target="viewer-card"]');
-                                if (card) {
-                                    highlightMessage(clicked_username);
-                                    let card_close = card.querySelector('[data-a-target="viewer-card-close-button"]');
-                                    if (card_close) {
-                                        card_close.addEventListener('click', () => {
-                                            removeAllHighlightedMessages();
-                                        });
-                                    }
-                                }
-                            }, 500);
-                        }
-
-                    }, 400);
-                }
+                e.preventDefault();
+                e.stopPropagation();
+                clearTimeout(timeoutShowCard);
+                timeoutShowCard = setTimeout(() => {
+                    ignore_next_click_event = true;
+                    e.target.click();
+                }, 400);
             }, true);
             document.body.addEventListener('dblclick', e => {
                 if (!ffzenhancing_doubleclick_username_paste_in_chat) return;
-                if (usernameElementClicked(e.target)) {
-                    clearTimeout(timeoutShowCard);
-                    let el = document.querySelector('.chat-input textarea');
-                    let txt = el.value;
-                    if (txt && txt.substr(-1) != ' ') {
-                        txt = txt + ' ';
-                    }
-                    if (!e.target.innerText.startsWith('@')) {
-                        txt = txt + '@';
-                    }
-                    txt = txt + e.target.innerText + ' ';
-                    reactElSetValue(el, txt);
-                    el.focus();
+                if (!usernameElementClicked(e.target)) return;
+                clearTimeout(timeoutShowCard);
+                let el = document.querySelector('.chat-input textarea');
+                let txt = el.value;
+                if (txt && txt.substr(-1) != ' ') {
+                    txt = txt + ' ';
                 }
+                if (!e.target.innerText.startsWith('@')) {
+                    txt = txt + '@';
+                }
+                txt = txt + e.target.innerText + ' ';
+                reactElSetValue(el, txt);
+                el.focus();
+            });
+        }
+        if (!handlers_already_attached['ffzenhancing_highlight_user_messages']) {
+            handlers_already_attached['ffzenhancing_highlight_user_messages'] = true;
+            document.body.addEventListener('click', e => {
+                if (!ffzenhancing_highlight_user_messages) return;
+                if (!usernameElementClicked(e.target)) return;
+                let clicked_username = e.target.innerText.toLowerCase();
+                if (clicked_username.startsWith('@'))
+                    clicked_username = clicked_username.substr(1);
+
+                ffz.site.children.chat.viewer_cards.ViewerCard.once('unmount', removeAllHighlightedMessages);
+
+                function checkViewerCard(tries = 0) { // because ffz.site.children.chat.viewer_cards.ViewerCard.once('mount', ...) isn't reliable
+                    if (tries > 20) return;
+                    const card = document.querySelector('[data-a-target="viewer-card"]');
+                    if (!card) return setTimeout(checkViewerCard, 100, tries + 1);
+                    highlightMessages(clicked_username);
+                }
+                checkViewerCard();
             });
         }
     }

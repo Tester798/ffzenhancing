@@ -4,7 +4,10 @@ const http = require('http');
 
 const host = 'localhost';
 const port = 8001;
-const url = '/ffzenhancing.js';
+const urls = [
+    '/ffzenhancing.js',
+    '/notify.ico',
+];
 
 
 function log(msg, error) {
@@ -13,10 +16,9 @@ function log(msg, error) {
 
 
 http.createServer((req, res) => {
-    if (req.url === url) {
-        return fs.readFile(__dirname + url, (err, data) => {
+    if (urls.includes(req.url)) {
+        return fs.readFile(__dirname + req.url, (err, data) => {
             if (err) {
-                cons
                 log(JSON.stringify(err), 500);
                 res.writeHead(500);
                 return res.end();
