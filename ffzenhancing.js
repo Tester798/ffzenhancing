@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.69';
+    let version = '6.70';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -1008,15 +1008,14 @@
                 const clicked_username = getLoginNameFromElement(e.target);
                 if (clicked_username === false) return;
 
-                ffz.site.children.chat.viewer_cards.ViewerCard.once('unmount', removeAllHighlightedMessages);
-
-                function checkViewerCard(tries = 0) { // because ffz.site.children.chat.viewer_cards.ViewerCard.once('mount', ...) isn't reliable
+                function checkViewerCard(tries = 0) {
                     if (tries > 20) return;
-                    const card = document.querySelector('[data-a-target="viewer-card"]');
-                    if (!card) return setTimeout(checkViewerCard, 100, tries + 1);
+                    const close_card = document.querySelector('[data-a-target="viewer-card"] [data-test-selector="close-viewer-card-button"]');
+                    if (!close_card) return setTimeout(checkViewerCard, 100, tries + 1);
                     highlightMessages(clicked_username);
+                    close_card.addEventListener('click', removeAllHighlightedMessages);
                 }
-                checkViewerCard();
+                setTimeout(checkViewerCard, 100);
             });
         }
     }
