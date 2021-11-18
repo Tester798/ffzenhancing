@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.68';
+    let version = '6.69';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -275,8 +275,10 @@
 
 
     function removeStyleFromSite(style_id) {
-        if (!added_styles[style_id]) return;
-        document.body.removeChild(added_styles[style_id]);
+        if (!(style_id in added_styles)) return;
+        try {
+            document.body.removeChild(added_styles[style_id]);
+        } catch {}
         delete added_styles[style_id];
     }
 
@@ -384,12 +386,32 @@
     function usernameElementClicked(el) {
         if (
             el.classList.contains('chat-author__display-name') ||
+            el.classList.contains('chat-author__intl-login') ||
             el.classList.contains('chat-line__message-mention') && !el.classList.contains('ffz-i-threads') ||
             el.parentNode.matches('span.chatter-name[role="button"]') ||
             el.parentNode.matches('span.ffz--giftee-name[role="button"]') ||
             (el.classList.contains('tw-link') && el.parentNode.parentNode.parentNode.parentNode.classList.contains('viewer-card-header__display-name')) // chatter name link in viewer card
         ) {
             return true;
+        }
+        return false;
+    }
+
+
+    function getLoginNameFromElement(el) {
+        let max_level = 10;
+        while (max_level >= 0) {
+            const data_login = el.getAttribute('data-login');
+            if (data_login !== null) return data_login;
+            const data_user = el.getAttribute('data-user');
+            if (data_user !== null) {
+                try {
+                    return JSON.parse(data_user).login;
+                } catch {}
+                return data_user;
+            }
+            el = el.parentNode;
+            max_level--;
         }
         return false;
     }
@@ -957,15 +979,22 @@
                 if (!ffzenhancing_doubleclick_username_paste_in_chat) return;
                 if (!usernameElementClicked(e.target)) return;
                 clearTimeout(timeoutShowCard);
+
                 let el = document.querySelector('.chat-input textarea');
                 let txt = el.value;
-                if (txt && txt.substr(-1) != ' ') {
+                let username = e.target.innerText;
+
+                if (username.startsWith(' (') && username.endsWith(')')) {
+                    username = username.slice(2, -1);
+                }
+                if (!username.startsWith('@') && txt.slice(-1) !== '@') {
+                    username = '@' + username;
+                }
+                if (txt.slice(-1) !== ' ' && txt.slice(-1) !== '@') {
                     txt = txt + ' ';
                 }
-                if (!e.target.innerText.startsWith('@')) {
-                    txt = txt + '@';
-                }
-                txt = txt + e.target.innerText + ' ';
+
+                txt = txt + username + ' ';
                 reactElSetValue(el, txt);
                 el.focus();
             });
@@ -975,9 +1004,9 @@
             document.body.addEventListener('click', e => {
                 if (!ffzenhancing_highlight_user_messages) return;
                 if (!usernameElementClicked(e.target)) return;
-                let clicked_username = e.target.innerText.toLowerCase();
-                if (clicked_username.startsWith('@'))
-                    clicked_username = clicked_username.substr(1);
+
+                const clicked_username = getLoginNameFromElement(e.target);
+                if (clicked_username === false) return;
 
                 ffz.site.children.chat.viewer_cards.ViewerCard.once('unmount', removeAllHighlightedMessages);
 
