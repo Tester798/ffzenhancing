@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.70';
+    let version = '6.71';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -685,6 +685,22 @@
                 appendEl = document.querySelector('.stream-chat-header > div:last-child');
             }
             if (el && appendEl) {
+                if (!el.__click_handler) {
+                    let clicked = false;
+                    el.__click_handler = e => {
+                        clicked = !clicked;
+                        if (clicked) {
+                            ffzenhancing_move_users_in_chat_to_bottom = false;
+                            ffzenhancing_hide_rooms_header = false;
+                        } else {
+                            ffzenhancing_move_users_in_chat_to_bottom = ffz.settings.get('ffzenhancing.move_users_in_chat_to_bottom');
+                            ffzenhancing_hide_rooms_header = ffz.settings.get('ffzenhancing.hide_rooms_header');
+                        }
+                        processSettings();
+                    };
+                    el.addEventListener('click', el.__click_handler);
+                }
+
                 el = el.parentNode;
                 el.parentNode.removeChild(el);
                 appendEl.prepend(el);
