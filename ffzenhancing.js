@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.72';
+    let version = '6.73';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -627,6 +627,8 @@
                 liveLatency = (ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.liveLatency) ||
                     (ffz.site.children.player.current.stats && ffz.site.children.player.current.stats.broadcasterLatency) ||
                     (ffz.site.children.player.current.core && ffz.site.children.player.current.core.stats && ffz.site.children.player.current.core.stats.broadcasterLatency);
+                const bufferSize = ffz.site.children.player.current.core && ffz.site.children.player.current.core.getBufferDuration && ffz.site.children.player.current.core.getBufferDuration();
+                if (bufferSize < liveLatency) liveLatency = bufferSize;
             } catch {}
             if (liveLatency !== undefined) {
                 if (ffzenhancing_reset_after_delay) {
