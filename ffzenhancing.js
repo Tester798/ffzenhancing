@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.74';
+    let version = '6.75';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -368,18 +368,22 @@
     }
 
 
-    function reactElSetValue(el, value) {
-        if (!el) return;
-        let lastValue = el.value;
-        el.value = value;
-        let event = new Event('input', {
-            bubbles: true
-        });
-        let tracker = el._valueTracker;
-        if (tracker) {
-            tracker.setValue(lastValue);
-        }
-        el.dispatchEvent(event);
+    function getChatInput() {
+        return ffz.resolve('site.chat.input').ChatInput.first.autocompleteInputRef.componentRef.props.value;
+    }
+
+
+    function setChatInput(txt) {
+        const el = ffz.resolve('site.chat.input').ChatInput.first.autocompleteInputRef;
+        el.setValue(txt);
+        el.componentRef.focus();
+    }
+
+
+    function setChatSelection(start, end) {
+        const el = ffz.resolve('site.chat.input').ChatInput.first;
+        el.chatInputRef.setSelectionRange(start, end);
+        el.autocompleteInputRef.componentRef.focus();
     }
 
 
@@ -960,11 +964,8 @@
             document.body.addEventListener('click', e => {
                 if (ffzenhancing_focus_input_area_after_emote_select && e.target.classList.contains('emote-picker__emote-link')) {
                     setTimeout(() => {
-                        let el = document.querySelector('.chat-input textarea');
-                        let txt = el.value;
-                        el.selectionStart = txt.length;
-                        el.selectionEnd = txt.length;
-                        el.focus();
+                        const txt = getChatInput();
+                        setChatSelection(txt.length, txt.length);
                     });
                 }
                 if (ffzenhancing_fix_tooltips) {
@@ -999,8 +1000,7 @@
                 if (!usernameElementClicked(e.target)) return;
                 clearTimeout(timeoutShowCard);
 
-                let el = document.querySelector('.chat-input textarea');
-                let txt = el.value;
+                let txt = getChatInput();
                 let username = e.target.innerText;
 
                 if (username.startsWith(' (') && username.endsWith(')')) {
@@ -1014,8 +1014,7 @@
                 }
 
                 txt = txt + username + ' ';
-                reactElSetValue(el, txt);
-                el.focus();
+                setChatInput(txt);
             });
         }
         if (!handlers_already_attached['ffzenhancing_highlight_user_messages']) {
