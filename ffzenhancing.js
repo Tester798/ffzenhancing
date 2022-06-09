@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.76';
+    let version = '6.77';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -460,19 +460,15 @@
         }
         if (document.visibilityState !== 'hidden') {
             try {
-                let def_quality = JSON.parse(window.localStorage.getItem('video-quality')).default;
-                let cur_quality = ffz.site.children.player.current.getQuality();
-                if (def_quality != cur_quality.group) {
-                    let new_quality = ffz.site.children.player.current.getQualities().find(q => q.group == def_quality);
-                    if (!new_quality) {
-                        let height_def = def_quality.substring(0, def_quality.indexOf('p'));
-                        let height_cur = cur_quality.height;
-                        if (height_def && height_def != height_cur) {
-                            new_quality = ffz.site.children.player.current.getQualities().find(q => q.height <= height_def);
+                let def_quality = window.localStorage.getItem('fzenhancing-video-quality');
+                if (def_quality) {
+                    def_quality = JSON.parse(def_quality);
+                    const cur_quality = ffz.site.children.player.current.getQuality();
+                    if (def_quality.height != cur_quality.height || def_quality.framerate != cur_quality.framerate) {
+                        const new_quality = ffz.site.children.player.current.getQualities().find(q => q.height <= def_quality.height && q.framerate <= def_quality.framerate);
+                        if (new_quality && new_quality.group != cur_quality.group) {
+                            ffz.site.children.player.current.setQuality(new_quality);
                         }
-                    }
-                    if (new_quality && new_quality.group != cur_quality.group) {
-                        ffz.site.children.player.current.setQuality(new_quality);
                     }
                 }
             } catch {}
@@ -798,6 +794,27 @@
                 document.body.removeEventListener('mouseover', handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover']);
                 delete handlers_already_attached['ffzenhancing_animate_static_gif_emotes_on_mouse_hover'];
             }
+        }
+
+        // ffzenhancing_auto_check_player_quality
+        if (ffzenhancing_auto_check_player_quality && !handlers_already_attached['PlayerQualityChanged_handler']) {
+            handlers_already_attached['PlayerQualityChanged_handler'] = true;
+            try {
+                let recently_clicked = false;
+                document.body.addEventListener('click', e => {
+                    if (!ffzenhancing_auto_check_player_quality) return;
+                    if (!e.target.parentNode.matches('[data-a-target="player-settings-submenu-quality-option"]')) return;
+                    recently_clicked = true;
+                });
+
+                ffz.site.children.player.current.addEventListener('PlayerQualityChanged', q => {
+                    if (recently_clicked) {
+                        recently_clicked = false;
+                        const s = {height: q.height, framerate: q.framerate};
+                        window.localStorage.setItem('fzenhancing-video-quality', JSON.stringify(s));
+                    }
+                });
+            } catch {}
         }
 
         // ffzenhancing_pin_mentions
