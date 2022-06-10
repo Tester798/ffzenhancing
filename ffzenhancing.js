@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.78';
+    let version = '6.79';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -519,7 +519,7 @@
         }
 
         if (!currentPlayerUserPaused) {
-            for (const el of document.querySelectorAll('[data-a-target="content-overlay-gate__text"]')) {
+            for (const el of document.querySelectorAll('.content-overlay-gate')) {
                 if (el.textContent.includes('#1000') || el.textContent.includes('#2000') || el.textContent.includes('#3000') || el.textContent.includes('#4000') || el.textContent.includes('#5000')) {
                     ffzResetPlayer();
                     break;
