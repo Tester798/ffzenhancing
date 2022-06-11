@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.79';
+    let version = '6.80';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -369,7 +369,8 @@
 
 
     function getChatInput() {
-        return ffz.resolve('site.chat.input').ChatInput.first.autocompleteInputRef.componentRef.props.value;
+        const el = ffz.resolve('site.chat.input').ChatInput.first.autocompleteInputRef.componentRef;
+        return el.value !== undefined ? el.value : el.props.value;
     }
 
 
@@ -1026,7 +1027,7 @@
                 if (!username.startsWith('@') && txt.slice(-1) !== '@') {
                     username = '@' + username;
                 }
-                if (txt.slice(-1) !== ' ' && txt.slice(-1) !== '@') {
+                if (txt.length > 0 && txt.slice(-1) !== ' ' && txt.slice(-1) !== '@') {
                     txt = txt + ' ';
                 }
 
