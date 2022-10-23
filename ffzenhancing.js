@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.81';
+    let version = '6.82';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -982,11 +982,18 @@
         if (!handlers_already_attached['ffzenhancing_focus_input_area_after_emote_select']) {
             handlers_already_attached['ffzenhancing_focus_input_area_after_emote_select'] = true;
             document.body.addEventListener('click', e => {
-                if (ffzenhancing_focus_input_area_after_emote_select && e.target.classList.contains('emote-picker__emote-link')) {
-                    setTimeout(() => {
-                        const txt = getChatInput();
-                        setChatSelection(txt.length, txt.length);
-                    });
+                if (ffzenhancing_focus_input_area_after_emote_select) {
+                    let check = e.target.classList.contains('emote-picker__emote-link');
+                    if (!check) {
+                        let el = e.target.parentNode.parentNode;
+                        if (el) check = el.getAttribute('data-a-target') === 'chat-send-button';
+                    }
+                    if (check) {
+                        setTimeout(() => {
+                            const txt = getChatInput();
+                            setChatSelection(txt.length, txt.length);
+                        });
+                    }
                 }
                 if (ffzenhancing_fix_tooltips) {
                     setTimeout(() => {
@@ -1092,8 +1099,8 @@
                     default: true,
                     ui: {
                         path: 'Add-Ons > FFZ Enhancing Add-On >> Input',
-                        title: 'Focus Input Area After Emote Select',
-                        description: 'Move focus to input area after emote select.',
+                        title: 'Focus Input Area After Emote Select or Message Send',
+                        description: 'Move focus to input area after emote select or message send.',
                         component: 'setting-check-box',
                     },
                     changed: val => ffzenhancing_focus_input_area_after_emote_select = val
