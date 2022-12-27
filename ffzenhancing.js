@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.82';
+    let version = '6.83';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -681,65 +681,74 @@
 
         // ffzenhancing_move_users_in_chat_to_bottom
         if (!window.location.href.endsWith('/squad')) {
-            if (ffzenhancing_move_users_in_chat_to_bottom) {
-                el = document.querySelector('.stream-chat-header button[data-test-selector="chat-viewer-list"]');
-                appendEl = document.querySelector('.chat-input__buttons-container > div:first-child');
-            } else {
-                el = document.querySelector('.chat-input__buttons-container button[data-test-selector="chat-viewer-list"]');
-                appendEl = document.querySelector('.stream-chat-header > div:last-child');
-            }
-            if (el && appendEl) {
-                if (!el.__click_handler) {
-                    let clicked = false;
-                    el.__click_handler = e => {
-                        clicked = !clicked;
-                        if (clicked) {
-                            ffzenhancing_move_users_in_chat_to_bottom = false;
-                            ffzenhancing_hide_rooms_header = false;
-                        } else {
-                            ffzenhancing_move_users_in_chat_to_bottom = ffz.settings.get('ffzenhancing.move_users_in_chat_to_bottom');
-                            ffzenhancing_hide_rooms_header = ffz.settings.get('ffzenhancing.hide_rooms_header');
-                        }
-                        processSettings();
-                    };
-                    el.addEventListener('click', el.__click_handler);
-                }
-
-                el = el.parentNode;
-                el.parentNode.removeChild(el);
-                appendEl.prepend(el);
-
+            function checkLoadFinished() {
                 if (ffzenhancing_move_users_in_chat_to_bottom) {
-                    addStyleToSite('ffzenhancing_move_users_in_chat_to_bottom', `
-                        [data-test-selector="chat-input-buttons-container"] .tw-balloon[role="dialog"] {
-                            margin-left: -30px;
-                        }
-                    `);
+                    el = document.querySelector('.stream-chat-header button[data-test-selector="chat-viewer-list"]');
+                    appendEl = document.querySelector('.chat-input__buttons-container > div:first-child');
                 } else {
-                    removeStyleFromSite('ffzenhancing_move_users_in_chat_to_bottom');
+                    el = document.querySelector('.chat-input__buttons-container button[data-test-selector="chat-viewer-list"]');
+                    appendEl = document.querySelector('.stream-chat-header > div:last-child');
                 }
-
-                let tooltip = el.querySelector('.tw-tooltip');
-                if (tooltip && tooltip.id) {
-                    if (ffzenhancing_move_users_in_chat_to_bottom) {
-                        addStyleToSite('ffzenhancing_move_users_in_chat_to_bottom_tooltip', `
-                            [id="${tooltip.id}"] {
-                                top: unset;
-                                bottom: 100%;
-                                margin-top: unset;
-                                margin-bottom: 6px;
+                if (el && appendEl) {
+                    if (!el.__click_handler) {
+                        let clicked = false;
+                        el.__click_handler = e => {
+                            clicked = !clicked;
+                            if (clicked) {
+                                ffzenhancing_move_users_in_chat_to_bottom = false;
+                                ffzenhancing_hide_rooms_header = false;
+                            } else {
+                                ffzenhancing_move_users_in_chat_to_bottom = ffz.settings.get('ffzenhancing.move_users_in_chat_to_bottom');
+                                ffzenhancing_hide_rooms_header = ffz.settings.get('ffzenhancing.hide_rooms_header');
                             }
+                            processSettings();
+                        };
+                        el.addEventListener('click', el.__click_handler);
+                    }
 
-                            [id="${tooltip.id}"]::after {
-                                top: unset;
-                                bottom: -3px;
+                    el = el.parentNode;
+                    el.parentNode.removeChild(el);
+                    appendEl.prepend(el);
+
+                    if (ffzenhancing_move_users_in_chat_to_bottom) {
+                        addStyleToSite('ffzenhancing_move_users_in_chat_to_bottom', `
+                            [data-test-selector="chat-input-buttons-container"] .tw-balloon[role="dialog"] {
+                                margin-left: -30px;
                             }
                         `);
                     } else {
-                        removeStyleFromSite('ffzenhancing_move_users_in_chat_to_bottom_tooltip');
+                        removeStyleFromSite('ffzenhancing_move_users_in_chat_to_bottom');
+                    }
+
+                    let tooltip = el.querySelector('.tw-tooltip');
+                    if (tooltip && tooltip.id) {
+                        if (ffzenhancing_move_users_in_chat_to_bottom) {
+                            addStyleToSite('ffzenhancing_move_users_in_chat_to_bottom_tooltip', `
+                                [id="${tooltip.id}"] {
+                                    top: unset;
+                                    bottom: 100%;
+                                    margin-top: unset;
+                                    margin-bottom: 6px;
+                                }
+
+                                [id="${tooltip.id}"]::after {
+                                    top: unset;
+                                    bottom: -3px;
+                                }
+                            `);
+                        } else {
+                            removeStyleFromSite('ffzenhancing_move_users_in_chat_to_bottom_tooltip');
+                        }
                     }
                 }
             }
+
+            let timeoutChatLoaded;
+
+            ffz.resolve('site.chat').PointsButton.ready(() => {
+                clearTimeout(timeoutChatLoaded);
+                timeoutChatLoaded = setTimeout(checkLoadFinished, 1000);
+            });
         }
 
         // ffzenhancing_hide_rooms_header
@@ -813,7 +822,10 @@
                     if (recently_clicked) {
                         recently_clicked = false;
                         if (ffz.site.router.current.name != 'user') return;
-                        const s = {height: q.height, framerate: q.framerate};
+                        const s = {
+                            height: q.height,
+                            framerate: q.framerate
+                        };
                         window.localStorage.setItem('fzenhancing-video-quality', JSON.stringify(s));
                     }
                 });
