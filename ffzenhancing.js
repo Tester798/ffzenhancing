@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.83';
+    let version = '6.84';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -545,7 +545,7 @@
         const video = getVideoLiveAndNotPaused();
         if (video) {
             if (!clickFfzBigPlayButton()) {
-                if (ffzenhancing_auto_reload_on_hanged_video_currentTime == video.currentTime) {
+                if (ffzenhancing_auto_reload_on_hanged_video_currentTime !== 0 && ffzenhancing_auto_reload_on_hanged_video_currentTime == video.currentTime) {
                     ffzResetPlayer();
                 }
                 ffzenhancing_auto_reload_on_hanged_video_currentTime = video.currentTime;
