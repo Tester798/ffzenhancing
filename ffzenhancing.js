@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.84';
+    let version = '6.85';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -208,6 +208,18 @@
 
     function getElementByXpath(xpath) {
         return document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    }
+
+
+    function findClosestBySelector(el, selector, depth) {
+        if (depth === undefined) depth = 1;
+        let parent = el;
+        for (let i = 0; i <= depth; i++) {
+            if (parent.matches(selector)) return parent;
+            parent = parent.parentNode;
+            if (!parent) return false;
+        }
+        return false;
     }
 
 
@@ -1060,19 +1072,17 @@
             handlers_already_attached['ffzenhancing_highlight_user_messages'] = true;
             document.body.addEventListener('click', e => {
                 if (!ffzenhancing_highlight_user_messages) return;
+
+                if (findClosestBySelector(e.target, '[data-a-target="viewer-card-close-button"]', 8)) {
+                    return removeAllHighlightedMessages();
+                }
+
                 if (!usernameElementClicked(e.target)) return;
 
                 const clicked_username = getLoginNameFromElement(e.target);
                 if (clicked_username === false) return;
 
-                function checkViewerCard(tries = 0) {
-                    if (tries > 20) return;
-                    const close_card = document.querySelector('[data-a-target="viewer-card"] [data-test-selector="close-viewer-card-button"]');
-                    if (!close_card) return setTimeout(checkViewerCard, 100, tries + 1);
-                    highlightMessages(clicked_username);
-                    close_card.addEventListener('click', removeAllHighlightedMessages);
-                }
-                setTimeout(checkViewerCard, 100);
+                highlightMessages(clicked_username);
             });
         }
     }
