@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.85';
+    let version = '6.86';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -1503,6 +1503,6 @@
     }
 
 
-    if (/^(?:player|im|chatdepot|tmi|api|spade|api-akamai|dev|)\./.test(window.location.hostname)) return;
+    if (/^(?:player|im|chatdepot|tmi|api|spade|api-akamai|dev|clips|)\./.test(window.location.hostname)) return;
     setTimeout(checkExistance, 1000);
 })();
