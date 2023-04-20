@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.86';
+    let version = '6.87';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -94,94 +94,6 @@
                 this.emit(':addon-loaded', id);
             };
         }
-
-        ffz.site.children.chat.ChatBuffer.ready((cls, instances) => {
-            const t = ffz.site.children.chat;
-            const old_mount = cls.prototype.componentDidMount;
-
-            cls.prototype.componentDidMount = function() {
-                setTimeout(() => {
-                    try {
-                        this.__ffz_enhancingInstall();
-                    } catch {}
-                }, 1000);
-                return old_mount.call(this);
-            };
-
-            cls.prototype.__ffz_enhancingInstall = function() {
-                if (this.__ffz_enhancing_installed)
-                    return;
-                this.__ffz_enhancing_installed = true;
-
-                const inst = this;
-                const handler = inst.props.messageHandlerAPI;
-                if (handler) {
-                    if (inst.handleMessage === undefined) {
-                        handler.addMessageHandler(my_handleMessage);
-                    } else {
-                        const orig_handleMessage = inst.handleMessage;
-                        handler.removeMessageHandler(orig_handleMessage);
-                        handler.addMessageHandler(my_handleMessage);
-                        handler.addMessageHandler(orig_handleMessage);
-                    }
-                }
-
-                function my_handleMessage(msg) {
-                    if (msg) {
-                        try {
-                            const types = t.chat_types || {};
-                            const mod_types = t.mod_types || {};
-                            if (msg.type === types.Moderation && inst.unsetModeratedUser) {
-                                if (inst.props.isCurrentUserModerator)
-                                    return;
-                                const user = msg.userLogin;
-                                if (inst.moderatedUsers.has(user))
-                                    return;
-                                const mod_action = msg.moderationType;
-                                let new_action;
-                                if (mod_action === mod_types.Ban)
-                                    new_action = 'ban';
-                                else if (mod_action === mod_types.Delete)
-                                    new_action = 'delete';
-                                else if (mod_action === mod_types.Unban)
-                                    new_action = 'unban';
-                                else if (mod_action === mod_types.Timeout)
-                                    new_action = 'timeout';
-                                if (new_action)
-                                    msg.moderationActionType = new_action;
-                                inst.moderateBuffers([
-                                    inst.buffer,
-                                    inst.delayedMessageBuffer.map(e => e.event)
-                                ], user, msg);
-                                inst.delayedMessageBuffer.push({
-                                    event: msg,
-                                    time: Date.now(),
-                                    shouldDelay: false
-                                });
-                                if (mod_action === mod_types.Timeout || mod_action === mod_types.Ban) {
-                                    for (const line of ffz.site.children.chat.chat_line.ChatLine.instances) {
-                                        const m = line.props.message;
-                                        if (m.user.userLogin === msg.userLogin && (m.modActionType === 'timeout' || m.modActionType === 'ban' || m.modActionType === 'delete')) {
-                                            m.modActionType = msg.moderationActionType;
-                                            m.duration = msg.duration;
-                                            m.banned = true;
-                                            m.deleted = true;
-                                            line.forceUpdate();
-                                        }
-                                    }
-                                }
-                            }
-                        } catch {}
-                    }
-                }
-            };
-
-            for (const inst of instances) {
-                try {
-                    inst.__ffz_enhancingInstall();
-                } catch {}
-            }
-        });
     }
 
 
