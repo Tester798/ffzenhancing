@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.88';
+    let version = '6.89';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -1012,6 +1012,20 @@
     }
 
 
+    function theatreModeCheck() {
+        // Fix FFZ not entering theatre mode sometimes
+        try {
+            if (
+                ffz.site.router.current.name == 'user' &&
+                ffz.settings.get('player.theatre.auto-enter') &&
+                !ffz.site.children.player.TheatreHost.first.props.theatreModeEnabled
+            ) {
+                ffz.site.children.player.TheatreHost.first.props.onTheatreModeEnabled();
+            }
+        } catch {}
+    }
+
+
     function main_init() {
         class FFZEnhancingAddOn extends FrankerFaceZ.utilities.addon.Addon {
             constructor(...args) {
@@ -1394,6 +1408,7 @@
                 this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
                 this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
                 this.site.children.player.PlayerSource.on('update', playerMount, this);
+                theatreModeCheck();
             }
         }
         FFZEnhancingAddOn.register('ffz-enhancing-addon');
