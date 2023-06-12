@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.89';
+    let version = '6.90';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -128,7 +128,7 @@
         if (depth === undefined) depth = 1;
         let parent = el;
         for (let i = 0; i <= depth; i++) {
-            if (parent.matches(selector)) return parent;
+            if (parent.matches && parent.matches(selector)) return parent;
             parent = parent.parentNode;
             if (!parent) return false;
         }
@@ -947,7 +947,7 @@
                     setTimeout(() => {
                         let el = document.querySelector('.ffz__tooltip');
                         if (el) el.parentNode.removeChild(el);
-                        el = document.querySelector('.tw-tooltip-layer');
+                        el = document.querySelector('.tw-tooltip-layer [data-popper-placement]');
                         if (el) el.parentNode.removeChild(el);
                     });
                 }
