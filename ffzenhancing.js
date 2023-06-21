@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.92';
+    let version = '6.93';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -29,6 +29,7 @@
     let ffzenhancing_fix_addon_load;
     let ffzenhancing_visibility_hook_time;
     let ffzenhancing_fix_video_freeze_on_tab_change;
+    let ffzenhancing_always_show_open_thread_button;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
     let timers = {};
@@ -95,6 +96,18 @@
                 this.emit(':addon-loaded', id);
             };
         }
+
+
+        if (ffzenhancing_always_show_open_thread_button) {
+            const old_onEnable = ffz.site.children.chat.chat_line.actions.onEnable;
+            ffz.site.children.chat.chat_line.actions.onEnable = function() {
+                old_onEnable.call(this);
+                ffz.site.children.chat.chat_line.actions.actions.reply.hidden = function() {
+                    return false;
+                };
+            };
+        }
+
 
         if (ffz.settings.get('chat.filtering.display-deleted') === 'DETAILED') {
             ffz.site.children.chat.ChatBuffer.ready((cls, instances) => {
@@ -1130,7 +1143,7 @@
 
                 // About
                 this.settings.addUI('ffzenhancing.about', {
-                    path: 'Add-Ons > FFZ Enhancing Add-On >> About @{"description": "Version ' + version + '"}'
+                    path: 'Add-Ons > FFZ Enhancing Add-On >> About @{"description": "Version [' + version + '](https://tester798.github.io/ffzenhancing/)"}'
                 });
 
 
@@ -1154,6 +1167,16 @@
                         component: 'setting-check-box',
                     },
                     changed: val => ffzenhancing_doubleclick_username_paste_in_chat = val
+                });
+                this.settings.add('ffzenhancing.always_show_open_thread_button', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Input',
+                        title: 'Always Show Open Thread Button',
+                        description: 'Always show Open Thread button on chat messages.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => ffzenhancing_always_show_open_thread_button = val
                 });
 
 
@@ -1490,6 +1513,7 @@
                 ffzenhancing_visibility_hook_time = this.settings.get('ffzenhancing.visibility_hook_time');
                 ffzenhancing_fix_addon_load = this.settings.get('ffzenhancing.fix_addon_load');
                 ffzenhancing_fix_video_freeze_on_tab_change = this.settings.get('ffzenhancing.fix_video_freeze_on_tab_change');
+                ffzenhancing_always_show_open_thread_button = this.settings.get('ffzenhancing.always_show_open_thread_button');
                 schedulePeriodicCheckVideoInfo();
                 setupHandlers();
                 error_2000_check();
