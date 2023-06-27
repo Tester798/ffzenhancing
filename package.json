@@ -1,0 +1,14 @@
+{
+    "name": "ffzenhancing",
+    "type": "module",
+    "scripts": {
+        "build": "babel -o ffzenhancing.js ffzenhancing.src.js",
+        "start": "nodemon -w ffzenhancing.src.js -x \"npm run build\""
+    },
+    "devDependencies": {
+        "@babel/preset-env": "latest",
+        "@babel/cli": "latest",
+        "@babel/core": "latest",
+        "nodemon": "latest"
+    }
+}

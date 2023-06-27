@@ -1,5 +1,8 @@
 *
 !.gitignore
+!.github
+!.github/workflows
+!.github/workflows/deploy.yml
 !Caddyfile
 !css
 !css/style.css
@@ -12,8 +15,8 @@
 !images/image4.png
 !images/icon128.png
 !README.md
-!_config.yml
-!ffzenhancing.js
+!package.json
+!ffzenhancing.src.js
 !ffzenhancing.user.js
 !dev_server.js
 !notify.ico
