@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.94';
+    let version = '6.95';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -185,24 +185,6 @@
                 }
             });
         }
-    }
-
-
-    function replaceEmoteMatcher(inst, retries = 0) {
-        function my_doesEmoteMatchTerm(emote, term) {
-            const ret = old_doesEmoteMatchTerm(emote, term);
-            if (ret !== 0) return ret;
-            if ((emote.tokenLower || (emote.name || emote.token).toLowerCase()).includes(term.toLowerCase()))
-                return 1;
-            return 0;
-        }
-
-        if (retries > 20) return;
-        if (!inst.doesEmoteMatchTerm) return setTimeout(replaceEmoteMatcher, 1000, inst, retries + 1);
-        if (inst.doesEmoteMatchTerm.toString() === my_doesEmoteMatchTerm.toString()) return;
-        if (inst.doesEmoteMatchTerm.toString() !== 'function(e,s){const n=e.name||e.token;if(!n)return 0;if(n.startsWith(s))return 3;let o=e.tokenLower;o||(o=n.toLowerCase());const a=s.toLowerCase();if(o.startsWith(a))return 2;const u=n.indexOf(s.charAt(0).toUpperCase());return-1!==u&&o.slice(u+1).startsWith(a.slice(1))?1:0}') return;
-        const old_doesEmoteMatchTerm = inst.doesEmoteMatchTerm;
-        inst.doesEmoteMatchTerm = my_doesEmoteMatchTerm;
     }
 
 
@@ -1538,10 +1520,6 @@
                 this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
                 this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
                 this.site.children.player.PlayerSource.on('update', playerMount, this);
-                this.site.children.chat.input.EmoteSuggestions.ready((cls, instances) => {
-                    for (const inst of instances) replaceEmoteMatcher(inst);
-                });
-                this.site.children.chat.input.EmoteSuggestions.on('mount', replaceEmoteMatcher, this);
                 theatreModeCheck();
             }
         }
