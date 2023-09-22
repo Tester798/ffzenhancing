@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.96';
+    let version = '6.97';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -30,6 +30,7 @@
     let ffzenhancing_visibility_hook_time;
     let ffzenhancing_fix_video_freeze_on_tab_change;
     let ffzenhancing_always_show_open_thread_button;
+    let ffzenhancing_always_show_open_thread_button_handler;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
     let timers = {};
@@ -99,11 +100,9 @@
         }
 
 
-        if (ffzenhancing_always_show_open_thread_button) {
-            ffz.site.children.chat.chat_line.actions.actions.reply.hidden = function() {
-                return false;
-            };
-        }
+        try {
+            ffzenhancing_always_show_open_thread_button_handler = ffz.site.children.chat.chat_line.actions.actions.reply.hidden;
+        } catch {}
 
 
         if (ffz.settings.get('chat.filtering.display-deleted') === 'DETAILED') {
@@ -863,6 +862,16 @@
             } catch {}
         }
 
+        // ffzenhancing_always_show_open_thread_button
+        try {
+            if (ffzenhancing_always_show_open_thread_button) {
+                ffz.site.children.chat.chat_line.actions.actions.reply.hidden = () => false;
+            } else if (ffzenhancing_always_show_open_thread_button_handler !== undefined) {
+                ffz.site.children.chat.chat_line.actions.actions.reply.hidden = ffzenhancing_always_show_open_thread_button_handler;
+            }
+            ffz.site.children.chat.chat_line.ChatLine.forceUpdate();
+        } catch {}
+
         // ffzenhancing_pin_mentions
         if (handlers_already_attached['ffzenhancing_pin_mentions']) {
             handlers_already_attached['ffzenhancing_pin_mentions'].disconnect();
@@ -1167,7 +1176,10 @@
                         description: 'Always show Open Thread button on chat messages.',
                         component: 'setting-check-box',
                     },
-                    changed: val => ffzenhancing_always_show_open_thread_button = val
+                    changed: val => {
+                        ffzenhancing_always_show_open_thread_button = val;
+                        processSettings();
+                    }
                 });
 
 
