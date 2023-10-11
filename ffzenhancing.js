@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.97';
+    let version = '6.98';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -13,6 +13,7 @@
     let ffzenhancing_doubleclick_username_paste_in_chat;
     let ffzenhancing_move_users_in_chat_to_bottom;
     let ffzenhancing_hide_rooms_header;
+    let ffzenhancing_hide_chat_collapse_button;
     let ffzenhancing_auto_reload_on_error_2000;
     let ffzenhancing_auto_reload_on_hanged_video;
     let ffzenhancing_auto_reload_on_hanged_video_after;
@@ -811,6 +812,13 @@
             }
         }
 
+        // ffzenhancing_hide_chat_collapse_button
+        if (ffzenhancing_hide_chat_collapse_button) {
+            addStyleToSite('ffzenhancing_hide_chat_collapse_button', '.right-column__toggle-visibility {display: none !important;}');
+        } else {
+            removeStyleFromSite('ffzenhancing_hide_chat_collapse_button');
+        }
+
         // ffzenhancing_fix_tooltips
         if (ffzenhancing_fix_tooltips) {
             addStyleToSite('ffzenhancing_fix_tooltips', '.ffz__tooltip {pointer-events: none;}');
@@ -1294,6 +1302,19 @@
                         processSettings();
                     }
                 });
+                this.settings.add('ffzenhancing.hide_chat_collapse_button', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Layout',
+                        title: 'Hide Chat Collapse Button',
+                        description: 'Hide chat collapse button in the right sidebar.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => {
+                        ffzenhancing_hide_chat_collapse_button = val;
+                        processSettings();
+                    }
+                });
 
 
                 // Other Settings
@@ -1501,6 +1522,7 @@
                 ffzenhancing_doubleclick_username_paste_in_chat = this.settings.get('ffzenhancing.doubleclick_username_paste_in_chat');
                 ffzenhancing_move_users_in_chat_to_bottom = this.settings.get('ffzenhancing.move_users_in_chat_to_bottom');
                 ffzenhancing_hide_rooms_header = this.settings.get('ffzenhancing.hide_rooms_header');
+                ffzenhancing_hide_chat_collapse_button = this.settings.get('ffzenhancing.hide_chat_collapse_button');
                 ffzenhancing_auto_reload_on_error_2000 = this.settings.get('ffzenhancing.auto_reload_on_error_2000');
                 ffzenhancing_auto_reload_on_hanged_video = this.settings.get('ffzenhancing.auto_reload_on_hanged_video');
                 ffzenhancing_auto_reload_on_hanged_video_after = this.settings.get('ffzenhancing.auto_reload_on_hanged_video_after');
