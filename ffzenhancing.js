@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.98';
+    let version = '6.99';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -814,7 +814,14 @@
 
         // ffzenhancing_hide_chat_collapse_button
         if (ffzenhancing_hide_chat_collapse_button) {
-            addStyleToSite('ffzenhancing_hide_chat_collapse_button', '.right-column__toggle-visibility {display: none !important;}');
+            addStyleToSite('ffzenhancing_hide_chat_collapse_button', `
+                .right-column:not(.right-column--fullscreen) .right-column__toggle-visibility {
+                    display: none !important;
+                }
+                .right-column.right-column--fullscreen .right-column__toggle-visibility {
+                    left: -35px;
+                }
+            `);
         } else {
             removeStyleFromSite('ffzenhancing_hide_chat_collapse_button');
         }
@@ -1306,8 +1313,8 @@
                     default: false,
                     ui: {
                         path: 'Add-Ons > FFZ Enhancing Add-On >> Layout',
-                        title: 'Hide Chat Collapse Button',
-                        description: 'Hide chat collapse button in the right sidebar.',
+                        title: 'Hide Chat Collapse Button When not in Fullscreen',
+                        description: 'Hide chat collapse button in the right sidebar when player is not in fullscreen mode.',
                         component: 'setting-check-box',
                     },
                     changed: val => {
@@ -1374,7 +1381,7 @@
                     default: false,
                     ui: {
                         path: 'Add-Ons > FFZ Enhancing Add-On >> Other Settings',
-                        title: 'Fix emotes select',
+                        title: 'Fix Emotes Select',
                         description: 'Fix emotes select when trying to select emotes in chat line.',
                         component: 'setting-check-box',
                     },
@@ -1387,7 +1394,7 @@
                     default: false,
                     ui: {
                         path: 'Add-Ons > FFZ Enhancing Add-On >> Other Settings',
-                        title: 'Highlight selected user messages',
+                        title: 'Highlight Selected User Messages',
                         description: 'Highlight messages of the user after username was clicked in chat.',
                         component: 'setting-check-box',
                     },
