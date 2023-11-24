@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.99';
+    let version = '6.100';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -815,7 +815,7 @@
         // ffzenhancing_hide_chat_collapse_button
         if (ffzenhancing_hide_chat_collapse_button) {
             addStyleToSite('ffzenhancing_hide_chat_collapse_button', `
-                .right-column:not(.right-column--fullscreen) .right-column__toggle-visibility {
+                .right-column:not(.right-column--fullscreen, .right-column--collapsed) .right-column__toggle-visibility {
                     display: none !important;
                 }
                 .right-column.right-column--fullscreen .right-column__toggle-visibility {
