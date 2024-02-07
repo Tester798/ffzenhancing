@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.100';
+    let version = '6.101';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -1111,7 +1111,9 @@
 
                 txt = txt + username + ' ';
                 setChatInput(txt);
-            });
+
+                e.stopPropagation();
+            }, true);
         }
         if (!handlers_already_attached['ffzenhancing_highlight_user_messages']) {
             handlers_already_attached['ffzenhancing_highlight_user_messages'] = true;
