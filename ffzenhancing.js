@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.101';
+    let version = '6.102';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -32,6 +32,7 @@
     let ffzenhancing_fix_video_freeze_on_tab_change;
     let ffzenhancing_always_show_open_thread_button;
     let ffzenhancing_always_show_open_thread_button_handler;
+    let ffzenhancing_pause_vod_on_click;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
     let timers = {};
@@ -472,6 +473,23 @@
     }
 
 
+    function isVodAndNotPaused() {
+        try {
+            const video = ffz.site.children.player.current.core.mediaSinkManager.video;
+            if (video) {
+                let broadcast_id;
+                broadcast_id = ffz.site.children.player.current.getSessionData()['BROADCAST-ID'];
+                if (broadcast_id === undefined || Number.isNaN(broadcast_id)) { // broadcast_id is NaN when user was offline or in vod, preventing endless refreshes
+                    if (!currentPlayerUserPaused) {
+                        return true;
+                    }
+                }
+            }
+        } catch {}
+        return false;
+    }
+
+
     function getVideoLiveAndNotPaused() {
         try {
             const video = ffz.site.children.player.current.core.mediaSinkManager.video;
@@ -812,6 +830,22 @@
             }
         }
 
+        // ffzenhancing_pause_vod_on_click
+        if (ffzenhancing_pause_vod_on_click) {
+            if (!handlers_already_attached['ffzenhancing_pause_vod_on_click']) {
+                handlers_already_attached['ffzenhancing_pause_vod_on_click'] = e => {
+                    if (!findClosestBySelector(e.target, '.video-player__overlay', 8)) return;
+                    if (isVodAndNotPaused()) ffz.site.children.player.current.pause();
+                };
+                document.body.addEventListener('click', handlers_already_attached['ffzenhancing_pause_vod_on_click']);
+            }
+        } else {
+            if (handlers_already_attached['ffzenhancing_pause_vod_on_click']) {
+                document.body.removeEventListener('click', handlers_already_attached['ffzenhancing_pause_vod_on_click']);
+                delete handlers_already_attached['ffzenhancing_pause_vod_on_click'];
+            }
+        }
+
         // ffzenhancing_hide_chat_collapse_button
         if (ffzenhancing_hide_chat_collapse_button) {
             addStyleToSite('ffzenhancing_hide_chat_collapse_button', `
@@ -916,13 +950,16 @@
                                     if (chat_line.matches('.ffz-mentioned')) {
                                         let cloned_chat_line = chat_line.cloneNode(true);
                                         if (!cloned_chat_line.querySelector('.chat-line__timestamp')) {
-                                            let ts = document.createElement('span');
-                                            ts.classList.add('chat-line__timestamp');
-                                            ts.textContent = (new Date()).toLocaleTimeString(window.navigator.userLanguage || window.navigator.language, {
-                                                hour: 'numeric',
-                                                minute: '2-digit'
-                                            });
-                                            cloned_chat_line.prepend(ts);
+                                            let c = cloned_chat_line.querySelector('.chat-line__message-container');
+                                            if (c) {
+                                                let ts = document.createElement('span');
+                                                ts.classList.add('chat-line__timestamp');
+                                                ts.textContent = (new Date()).toLocaleTimeString(window.navigator.userLanguage || window.navigator.language, {
+                                                    hour: 'numeric',
+                                                    minute: '2-digit'
+                                                });
+                                                c.prepend(ts);
+                                            }
                                         }
                                         cloned_chat_line.setAttribute('style', 'border: 1px solid red !important; border-top: none !important;');
                                         let close_button = document.createElement('div');
@@ -1289,8 +1326,8 @@
                     default: false,
                     ui: {
                         path: 'Add-Ons > FFZ Enhancing Add-On >> Layout',
-                        title: 'Move "Users in Chat" Button to Bottom',
-                        description: 'Move "Users in Chat" button from room header to bottom.',
+                        title: 'Move "Community" Button to Bottom',
+                        description: 'Move "Community" button from room header to bottom.',
                         component: 'setting-check-box',
                     },
                     changed: val => {
@@ -1415,6 +1452,19 @@
 
 
                 // Player
+                this.settings.add('ffzenhancing.pause_vod_on_click', {
+                    default: false,
+                    ui: {
+                        path: 'Add-Ons > FFZ Enhancing Add-On >> Player',
+                        title: 'Pause Video Player by Clicking',
+                        description: 'Click to pause the player when playing video.',
+                        component: 'setting-check-box',
+                    },
+                    changed: val => {
+                        ffzenhancing_pause_vod_on_click = val;
+                        processSettings();
+                    }
+                });
                 this.settings.add('ffzenhancing.auto_reload_on_error_2000', {
                     default: false,
                     ui: {
@@ -1548,6 +1598,7 @@
                 ffzenhancing_fix_addon_load = this.settings.get('ffzenhancing.fix_addon_load');
                 ffzenhancing_fix_video_freeze_on_tab_change = this.settings.get('ffzenhancing.fix_video_freeze_on_tab_change');
                 ffzenhancing_always_show_open_thread_button = this.settings.get('ffzenhancing.always_show_open_thread_button');
+                ffzenhancing_pause_vod_on_click = this.settings.get('ffzenhancing.pause_vod_on_click');
                 schedulePeriodicCheckVideoInfo();
                 setupHandlers();
                 error_2000_check();
