@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.102';
+    let version = '6.103';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -54,6 +54,19 @@
     let playbackRate_set_by_us = false;
     let orig_playbackRate_set;
     let recently_clicked_playerQualityChange = false;
+
+
+    function getReactInstance(el) {
+        for (const prop_name in el) {
+            if (prop_name.startsWith('__reactInternalInstance$')) return el[prop_name];
+        }
+    }
+
+
+    function getMessageObj(el) {
+        const inst = getReactInstance(el);
+        if (inst) return inst.return.pendingProps.message;
+    }
 
 
     function getPropertyDescriptor(o, p) {
@@ -954,11 +967,12 @@
                                             if (c) {
                                                 let ts = document.createElement('span');
                                                 ts.classList.add('chat-line__timestamp');
-                                                ts.textContent = (new Date()).toLocaleTimeString(window.navigator.userLanguage || window.navigator.language, {
-                                                    hour: 'numeric',
-                                                    minute: '2-digit'
-                                                });
-                                                c.prepend(ts);
+                                                let d = getMessageObj(chat_line);
+                                                if (d) d = d.timestamp;
+                                                ts.textContent = ffz.site.children.chat.chat_line.chat.formatTime(d || new Date());
+                                                let b = c.querySelector('.chat-line__message--badges');
+                                                if (b) c.insertBefore(ts, b);
+                                                else c.prepend(ts);
                                             }
                                         }
                                         cloned_chat_line.setAttribute('style', 'border: 1px solid red !important; border-top: none !important;');
