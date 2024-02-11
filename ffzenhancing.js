@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.103';
+    let version = '6.104';
     let notify_icon = __ffzenhancing_base_url + 'notify.ico';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
@@ -847,7 +847,7 @@
         if (ffzenhancing_pause_vod_on_click) {
             if (!handlers_already_attached['ffzenhancing_pause_vod_on_click']) {
                 handlers_already_attached['ffzenhancing_pause_vod_on_click'] = e => {
-                    if (!findClosestBySelector(e.target, '.video-player__overlay', 8)) return;
+                    if (!findClosestBySelector(e.target, '.player-overlay-background, [data-a-target="player-overlay-click-handler"]', 7)) return;
                     if (isVodAndNotPaused()) ffz.site.children.player.current.pause();
                 };
                 document.body.addEventListener('click', handlers_already_attached['ffzenhancing_pause_vod_on_click']);
