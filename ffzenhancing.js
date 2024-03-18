@@ -1,7 +1,7 @@
 'use strict';
 (() => {
-    let version = '6.104';
-    let notify_icon = __ffzenhancing_base_url + 'notify.ico';
+    let version = '6.105';
+    let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffzenhancing_focus_input_area_after_emote_select;
     let ffzenhancing_keep_delay_low;
@@ -954,7 +954,10 @@
                 if (chat_log) {
                     let pinned_log = document.createElement('div');
                     pinned_log.setAttribute('style', 'position: absolute; background-color: var(--color-background-body); z-index: 1000; width: 100%;');
-                    chat_log.parentNode.prepend(pinned_log);
+                    let parent = document.querySelector('.chat-list--default');
+                    if (parent) parent = parent.previousSibling;
+                    if (!parent) parent = chat_log.parentNode;
+                    parent.prepend(pinned_log);
                     handlers_already_attached['ffzenhancing_pin_mentions'] = new MutationObserver(mutations => {
                         mutations.forEach(mutation => {
                             if (mutation.addedNodes.length > 0) {

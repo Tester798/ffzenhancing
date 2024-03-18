@@ -6,7 +6,7 @@ const host = 'localhost';
 const port = 8001;
 const urls = [
     '/ffzenhancing.js',
-    '/notify.ico',
+    '/notify.png',
 ];
 
 
