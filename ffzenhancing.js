@@ -1,8 +1,9 @@
 'use strict';
 (() => {
-    let version = '6.106';
+    let version = '6.107';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
+    let ffz_is_player = window.location.hostname.startsWith('player');
     let ffzenhancing_focus_input_area_after_emote_select;
     let ffzenhancing_keep_delay_low;
     let ffzenhancing_keep_delay_low_delay;
@@ -56,6 +57,11 @@
     let recently_clicked_playerQualityChange = false;
 
 
+    function isPlayerOrUserRoute() {
+        return ffz_is_player || ffz.site.router.current.name == 'user';
+    }
+
+
     function getReactInstance(el) {
         for (const prop_name in el) {
             if (prop_name.startsWith('__reactInternalInstance$')) return el[prop_name];
@@ -87,114 +93,114 @@
 
 
     function replaceFunctions() {
-        if (ffzenhancing_fix_addon_load) {
-            ffz.addons.loadAddon = async function(id) {
-                const addon = this.getAddon(id);
-                if (!addon)
-                    throw new Error(`Unknown add-on id: ${id}`);
-                let module = this.resolve(`addon.${id}`);
-                if (module) {
-                    if (!module.loaded)
+        try {
+            if (ffzenhancing_fix_addon_load) {
+                ffz.addons.loadAddon = async function(id) {
+                    const addon = this.getAddon(id);
+                    if (!addon)
+                        throw new Error(`Unknown add-on id: ${id}`);
+                    let module = this.resolve(`addon.${id}`);
+                    if (module) {
+                        if (!module.loaded)
+                            await module.load();
+                        this.emit(':addon-loaded', id);
+                        return;
+                    }
+                    const el = ffz.constructor.utilities.dom.createElement('script', {
+                        id: `ffz-loaded-addon-${addon.id}`,
+                        type: 'text/javascript',
+                        src: addon.src || `${addon.dev ? 'https://localhost:8001' : ffz.constructor.utilities.constants.SERVER}/script/addons/${addon.id}/script.js?_=${ffz.constructor.utilities.time.getBuster(30)}`,
+                        crossorigin: 'anonymous'
+                    });
+                    document.head.appendChild(el);
+                    await this.waitFor(`addon.${id}:registered`);
+                    module = this.resolve(`addon.${id}`);
+                    if (module && !module.loaded)
                         await module.load();
                     this.emit(':addon-loaded', id);
-                    return;
-                }
-                const el = ffz.constructor.utilities.dom.createElement('script', {
-                    id: `ffz-loaded-addon-${addon.id}`,
-                    type: 'text/javascript',
-                    src: addon.src || `${addon.dev ? 'https://localhost:8001' : ffz.constructor.utilities.constants.SERVER}/script/addons/${addon.id}/script.js?_=${ffz.constructor.utilities.time.getBuster(30)}`,
-                    crossorigin: 'anonymous'
-                });
-                document.head.appendChild(el);
-                await this.waitFor(`addon.${id}:registered`);
-                module = this.resolve(`addon.${id}`);
-                if (module && !module.loaded)
-                    await module.load();
-                this.emit(':addon-loaded', id);
-            };
-        }
-
-
-        try {
-            ffzenhancing_always_show_open_thread_button_handler = ffz.site.children.chat.chat_line.actions.actions.reply.hidden;
-        } catch {}
-
-
-        if (ffz.settings.get('chat.filtering.display-deleted') === 'DETAILED') {
-            ffz.site.children.chat.ChatBuffer.ready((cls, instances) => {
-                const t = ffz.site.children.chat;
-                const old_mount = cls.prototype.componentDidMount;
-
-                cls.prototype.componentDidMount = function() {
-                    setTimeout(() => {
-                        try {
-                            this.__ffz_enhancingInstall();
-                        } catch {}
-                    }, 1000);
-                    return old_mount.call(this);
                 };
+            }
 
-                cls.prototype.__ffz_enhancingInstall = function() {
-                    if (this.__ffz_enhancing_installed)
-                        return;
-                    this.__ffz_enhancing_installed = true;
+            try {
+                ffzenhancing_always_show_open_thread_button_handler = ffz.site.children.chat.chat_line.actions.actions.reply.hidden;
+            } catch {}
 
-                    const inst = this;
-                    const handler = inst.props.messageHandlerAPI;
-                    if (handler) {
-                        if (inst.handleMessage === undefined) {
-                            handler.addMessageHandler(my_handleMessage);
-                        } else {
-                            const orig_handleMessage = inst.handleMessage;
-                            handler.removeMessageHandler(orig_handleMessage);
-                            handler.addMessageHandler(my_handleMessage);
-                            handler.addMessageHandler(orig_handleMessage);
-                        }
-                    }
+            if (ffz.settings.get('chat.filtering.display-deleted') === 'DETAILED') {
+                ffz.site.children.chat.ChatBuffer.ready((cls, instances) => {
+                    const t = ffz.site.children.chat;
+                    const old_mount = cls.prototype.componentDidMount;
 
-                    function my_handleMessage(msg) {
-                        if (msg) {
+                    cls.prototype.componentDidMount = function() {
+                        setTimeout(() => {
                             try {
-                                const types = t.chat_types || {};
-                                const mod_types = t.mod_types || {};
-                                if (msg.type === types.Moderation && inst.unsetModeratedUser) {
-                                    if (inst.props.isCurrentUserModerator)
-                                        return;
-                                    const mod_action = msg.moderationType;
-                                    let new_action;
-                                    if (mod_action === mod_types.Ban)
-                                        new_action = 'ban';
-                                    else if (mod_action === mod_types.Timeout)
-                                        new_action = 'timeout';
-                                    if (new_action)
-                                        msg.moderationActionType = new_action;
-                                    else
-                                        return;
-                                    if (mod_action === mod_types.Timeout || mod_action === mod_types.Ban) {
-                                        for (const line of ffz.site.children.chat.chat_line.ChatLine.instances) {
-                                            const m = line.props.message;
-                                            if (m.user.userLogin === msg.userLogin && (m.modActionType === 'timeout' || m.modActionType === 'ban' || m.modActionType === 'delete')) {
-                                                m.modActionType = msg.moderationActionType;
-                                                m.duration = msg.duration;
-                                                m.banned = true;
-                                                m.deleted = true;
-                                                line.forceUpdate();
+                                this.__ffz_enhancingInstall();
+                            } catch {}
+                        }, 1000);
+                        return old_mount.call(this);
+                    };
+
+                    cls.prototype.__ffz_enhancingInstall = function() {
+                        if (this.__ffz_enhancing_installed)
+                            return;
+                        this.__ffz_enhancing_installed = true;
+
+                        const inst = this;
+                        const handler = inst.props.messageHandlerAPI;
+                        if (handler) {
+                            if (inst.handleMessage === undefined) {
+                                handler.addMessageHandler(my_handleMessage);
+                            } else {
+                                const orig_handleMessage = inst.handleMessage;
+                                handler.removeMessageHandler(orig_handleMessage);
+                                handler.addMessageHandler(my_handleMessage);
+                                handler.addMessageHandler(orig_handleMessage);
+                            }
+                        }
+
+                        function my_handleMessage(msg) {
+                            if (msg) {
+                                try {
+                                    const types = t.chat_types || {};
+                                    const mod_types = t.mod_types || {};
+                                    if (msg.type === types.Moderation && inst.unsetModeratedUser) {
+                                        if (inst.props.isCurrentUserModerator)
+                                            return;
+                                        const mod_action = msg.moderationType;
+                                        let new_action;
+                                        if (mod_action === mod_types.Ban)
+                                            new_action = 'ban';
+                                        else if (mod_action === mod_types.Timeout)
+                                            new_action = 'timeout';
+                                        if (new_action)
+                                            msg.moderationActionType = new_action;
+                                        else
+                                            return;
+                                        if (mod_action === mod_types.Timeout || mod_action === mod_types.Ban) {
+                                            for (const line of ffz.site.children.chat.chat_line.ChatLine.instances) {
+                                                const m = line.props.message;
+                                                if (m.user.userLogin === msg.userLogin && (m.modActionType === 'timeout' || m.modActionType === 'ban' || m.modActionType === 'delete')) {
+                                                    m.modActionType = msg.moderationActionType;
+                                                    m.duration = msg.duration;
+                                                    m.banned = true;
+                                                    m.deleted = true;
+                                                    line.forceUpdate();
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            } catch {}
+                                } catch {}
+                            }
                         }
-                    }
-                };
+                    };
 
-                for (const inst of instances) {
-                    try {
-                        inst.__ffz_enhancingInstall();
-                    } catch {}
-                }
-            });
-        }
+                    for (const inst of instances) {
+                        try {
+                            inst.__ffz_enhancingInstall();
+                        } catch {}
+                    }
+                });
+            }
+        } catch {}
     }
 
 
@@ -263,7 +269,7 @@
 
     function playbackRateSetHook(rate) {
         try {
-            if (ffzenhancing_keep_delay_low && !playbackRate_set_by_us && ffz.site.router.current.name == 'user') return rate;
+            if (ffzenhancing_keep_delay_low && !playbackRate_set_by_us && isPlayerOrUserRoute()) return rate;
         } catch {}
         return orig_playbackRate_set.call(this, rate);
     };
@@ -361,14 +367,17 @@
         try {
             if (!recently_clicked_playerQualityChange) return;
             recently_clicked_playerQualityChange = false;
-            if (ffz.site.router.current.name != 'user') return;
+            if (!isPlayerOrUserRoute()) return;
             const autoQualityMode = ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.autoQualityMode;
-            if (autoQualityMode) return;
+            if (autoQualityMode) {
+                ffz.settings.provider.delete('ffzenhancing.video-quality');
+                return;
+            }
             const s = {
                 height: q.height,
                 framerate: q.framerate,
             };
-            window.localStorage.setItem('ffzenhancing-video-quality', JSON.stringify(s));
+            ffz.settings.provider.set('ffzenhancing.video-quality', s);
         } catch {}
     }
 
@@ -508,7 +517,7 @@
             const video = ffz.site.children.player.current.core.mediaSinkManager.video;
             if (video) {
                 let broadcast_id;
-                if (ffz.site.router.current.name != 'user') return false;
+                if (!isPlayerOrUserRoute()) return false;
                 broadcast_id = ffz.site.children.player.current.getSessionData()['BROADCAST-ID'];
                 if (broadcast_id !== undefined && !Number.isNaN(broadcast_id)) { // broadcast_id is NaN when user was offline or in vod, preventing endless refreshes
                     if (!currentPlayerUserPaused) {
@@ -527,18 +536,16 @@
             clearTimeout(timers['playerQualityCheck']);
         }
         try {
-            if (!recently_clicked_playerQualityChange && document.visibilityState !== 'hidden' && ffz.site.router.current.name == 'user') {
-                const autoQualityMode = ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.autoQualityMode;
-                if (!autoQualityMode) {
-                    let def_quality = window.localStorage.getItem('ffzenhancing-video-quality');
-                    if (def_quality) {
-                        def_quality = JSON.parse(def_quality);
-                        const cur_quality = ffz.site.children.player.current.getQuality();
-                        if (def_quality.height != cur_quality.height || def_quality.framerate != cur_quality.framerate) {
-                            const new_quality = ffz.site.children.player.current.getQualities().find(q => q.height == def_quality.height && q.framerate <= def_quality.framerate || q.height < def_quality.height);
-                            if (new_quality && new_quality.group != cur_quality.group) {
-                                ffz.site.children.player.current.setQuality(new_quality);
-                            }
+            if (!recently_clicked_playerQualityChange && document.visibilityState !== 'hidden' && isPlayerOrUserRoute()) {
+                const def_quality = ffz.settings.provider.get('ffzenhancing.video-quality');
+                let autoQualityMode = ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.autoQualityMode;
+                if (autoQualityMode && ffz_is_player && def_quality) autoQualityMode = false;
+                if (!autoQualityMode && def_quality) {
+                    const cur_quality = ffz.site.children.player.current.getQuality();
+                    if (def_quality.height != cur_quality.height || def_quality.framerate != cur_quality.framerate) {
+                        const new_quality = ffz.site.children.player.current.getQualities().find(q => q.height == def_quality.height && q.framerate <= def_quality.framerate || q.height < def_quality.height);
+                        if (new_quality && new_quality.group != cur_quality.group) {
+                            ffz.site.children.player.current.setQuality(new_quality);
                         }
                     }
                 }
@@ -815,7 +822,7 @@
 
             let timeoutChatLoaded;
 
-            ffz.resolve('site.chat').PointsButton.ready(() => {
+            if (ffz.resolve('site.chat')) ffz.resolve('site.chat').PointsButton.ready(() => {
                 clearTimeout(timeoutChatLoaded);
                 timeoutChatLoaded = setTimeout(checkLoadFinished, 1000);
             });
@@ -913,7 +920,7 @@
                     handlers_already_attached['PlayerQualityChange_click'] = true;
                     document.body.addEventListener('click', e => {
                         if (!ffzenhancing_auto_check_player_quality) return;
-                        if (ffz.site.router.current.name != 'user') return;
+                        if (!isPlayerOrUserRoute()) return;
                         if (!findClosestBySelector(e.target, '[data-a-target="player-settings-submenu-quality-option"]', 2)) return;
                         recently_clicked_playerQualityChange = true;
                     });
@@ -1209,7 +1216,7 @@
                 super(...args);
                 this.inject('settings');
                 this.inject('site');
-                this.inject('chat.actions');
+                if (!ffz_is_player) this.inject('chat.actions');
 
 
                 // About
@@ -1625,8 +1632,8 @@
                 processSettings_schedule();
                 periodicCheckClaimBonus();
                 replaceFunctions();
-                this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
-                this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
+                if (this.site.children.chat) this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
+                if (this.site.children.chat) this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
                 this.site.children.player.PlayerSource.on('update', playerMount, this);
                 theatreModeCheck();
             }
@@ -1647,6 +1654,6 @@
     }
 
 
-    if (/^(?:player|im|chatdepot|tmi|api|spade|api-akamai|dev|clips|)\./.test(window.location.hostname)) return;
+    if (/^(?:localhost\.rig|blog|im|chatdepot|tmi|api|brand|dev|gql|passport)\./.test(window.location.hostname)) return;
     setTimeout(checkExistance, 1000);
 })();
