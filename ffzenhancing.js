@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.107';
+    let version = '6.108';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -789,7 +789,7 @@
 
                     if (ffzenhancing_move_users_in_chat_to_bottom) {
                         addStyleToSite('ffzenhancing_move_users_in_chat_to_bottom', `
-                            [data-test-selector="chat-input-buttons-container"] .tw-balloon[role="dialog"] {
+                            [data-test-selector="chat-input-buttons-container"] [role="dialog"] {
                                 margin-left: -30px;
                             }
                         `);
