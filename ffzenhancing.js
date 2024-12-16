@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.110';
+    let version = '6.111';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -827,6 +827,13 @@
                 timeoutChatLoaded = setTimeout(checkLoadFinished, 1000);
             });
         }
+
+        // fix for broken pinned chat messages
+        addStyleToSite('ffzenhancing_fix_broken_pinned_chat_messages', `
+            .pinned-chat__message {
+                min-height: 0;
+            }
+        `);
 
         // ffzenhancing_hide_rooms_header
         if (!window.location.href.endsWith('/squad')) {
