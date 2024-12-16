@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.111';
+    let version = '6.112';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -966,7 +966,7 @@
             if (chat_list) {
                 let chat_log;
                 try {
-                    chat_log = chat_list.querySelector('[role="log"]');
+                    chat_log = chat_list.querySelector('.chat-scrollable-area__message-container');
                 } catch {}
                 if (chat_log) {
                     let pinned_log = document.createElement('div');
