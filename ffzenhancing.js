@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.109';
+    let version = '6.110';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -835,7 +835,10 @@
                 if (ffzenhancing_hide_rooms_header) {
                     addStyleToSite('ffzenhancing_hide_rooms_header', `
                         .stream-chat-header {
-                            display: none !important;
+                            height: 0;
+                            opacity: 0;
+                            pointer-events: none;
+                            z-index: auto !important;
                         }
                         button[data-a-target="chat-viewer-list"][aria-label="Close"] {
                             margin-left: 30px;
