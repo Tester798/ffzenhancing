@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.112';
+    let version = '6.113';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -55,6 +55,7 @@
     let playbackRate_set_by_us = false;
     let orig_playbackRate_set;
     let recently_clicked_playerQualityChange = false;
+    let buffer_times = [];
 
 
     function isPlayerOrUserRoute() {
@@ -635,7 +636,7 @@
 
     function schedulePeriodicCheckVideoInfo(ms) {
         clearTimeout(timeoutPeriodicCheckVideoInfo);
-        timeoutPeriodicCheckVideoInfo = setTimeout(periodicCheckVideoInfo, ms || 500);
+        timeoutPeriodicCheckVideoInfo = setTimeout(periodicCheckVideoInfo, ms || 300);
     }
 
 
@@ -654,6 +655,7 @@
             playbackRate_set_by_us = false;
             ffzenhancing_keep_delay_low_latency_was_changed = false;
         }
+        buffer_times = [];
     }
 
 
@@ -721,6 +723,23 @@
                     } catch {}
                     const delay = isLowDelayEnabled ? ffzenhancing_keep_delay_low_delay_low_latency : ffzenhancing_keep_delay_low_delay;
                     if (liveLatency > delay) {
+                        try {
+                            const buffer_time = ffz.site.children.player.current.core.state.bufferedPosition - ffz.site.children.player.current.core.state.position;
+                            if (!Number.isNaN(buffer_time)) {
+                                buffer_times.push(buffer_time);
+                                if (buffer_times.length < 20) {
+                                    schedulePeriodicCheckVideoInfo();
+                                    return;
+                                }
+                                const min_buffer = Math.min.apply(null, buffer_times);
+                                buffer_times.shift();
+                                if (min_buffer < 1) {
+                                    resetPlayerPlaybackSpeed(video);
+                                    schedulePeriodicCheckVideoInfo(5000);
+                                    return;
+                                }
+                            }
+                        } catch {}
                         increasePlayerPlaybackSpeed(video);
                         schedulePeriodicCheckVideoInfo();
                         return;
