@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.113';
+    let version = '6.114';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -733,7 +733,7 @@
                                 }
                                 const min_buffer = Math.min.apply(null, buffer_times);
                                 buffer_times.shift();
-                                if (min_buffer < 1) {
+                                if (min_buffer < (isLowDelayEnabled ? 1 : 1.5)) {
                                     resetPlayerPlaybackSpeed(video);
                                     schedulePeriodicCheckVideoInfo(5000);
                                     return;
