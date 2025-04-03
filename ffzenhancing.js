@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.114';
+    let version = '6.115';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -989,7 +989,13 @@
                 } catch {}
                 if (chat_log) {
                     let pinned_log = document.createElement('div');
+                    pinned_log.classList.add('ffzenhancing__pinned_log');
                     pinned_log.setAttribute('style', 'position: absolute; background-color: var(--color-background-body); z-index: 1000; width: 100%;');
+                    addStyleToSite('ffzenhancing_pinned_log', `
+                        .ffzenhancing__pinned_log .ffz--hover-actions {
+                            display: none !important;
+                        }
+                    `);
                     let parent = document.querySelector('.chat-list--default');
                     if (parent) parent = parent.previousSibling;
                     if (!parent) parent = chat_log.parentNode;
@@ -1016,7 +1022,7 @@
                                         }
                                         cloned_chat_line.setAttribute('style', 'border: 1px solid red !important; border-top: none !important; position: relative;');
                                         let close_button = document.createElement('div');
-                                        close_button.setAttribute('style', 'width: 14px; cursor: pointer; top: 5px; right: 5px; position: absolute;');
+                                        close_button.setAttribute('style', 'width: 14px; cursor: pointer; top: 5px; right: 5px; position: absolute; z-index: 1000;');
                                         close_button.innerHTML = '<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45" style="enable-background:new 0 0 45 45;" xml:space="preserve" version="1.1" id="svg2"><metadata id="metadata8"><rdf:RDF><cc:Work rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/></cc:Work></rdf:RDF></metadata><defs id="defs6"><clipPath id="clipPath16" clipPathUnits="userSpaceOnUse"><path id="path18" d="M 0,36 36,36 36,0 0,0 0,36 Z"/></clipPath></defs><g transform="matrix(1.25,0,0,-1.25,0,45)" id="g10"><g id="g12"><g clip-path="url(#clipPath16)" id="g14"><g transform="translate(21.5332,17.9976)" id="g20"><path id="path22" style="fill:#dd2e44;fill-opacity:1;fill-rule:nonzero;stroke:none" d="m 0,0 12.234,12.234 c 0.977,0.976 0.977,2.559 0,3.535 -0.976,0.977 -2.558,0.977 -3.535,0 L -3.535,3.535 -15.77,15.769 c -0.975,0.977 -2.559,0.977 -3.535,0 -0.976,-0.976 -0.976,-2.559 0,-3.535 L -7.07,0 -19.332,-12.262 c -0.977,-0.977 -0.977,-2.559 0,-3.535 0.488,-0.489 1.128,-0.733 1.768,-0.733 0.639,0 1.279,0.244 1.767,0.733 L -3.535,-3.535 8.699,-15.769 c 0.489,-0.488 1.128,-0.733 1.768,-0.733 0.639,0 1.279,0.245 1.767,0.733 0.977,0.976 0.977,2.558 0,3.535 L 0,0 Z"/></g></g></g></g></svg>';
                                         close_button.addEventListener('click', e => {
                                             e.currentTarget.parentNode.remove();
