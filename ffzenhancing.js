@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.115';
+    let version = '6.116';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -32,7 +32,8 @@
     let ffzenhancing_visibility_hook_time;
     let ffzenhancing_fix_video_freeze_on_tab_change;
     let ffzenhancing_always_show_open_thread_button;
-    let ffzenhancing_always_show_open_thread_button_handler;
+    let ffzenhancing_always_show_open_thread_button_handler_hidden;
+    let ffzenhancing_always_show_open_thread_button_handler_click;
     let ffzenhancing_pause_vod_on_click;
     let timeoutPeriodicCheckVideoInfo = 0;
     let handlers_already_attached = {};
@@ -123,7 +124,8 @@
             }
 
             try {
-                ffzenhancing_always_show_open_thread_button_handler = ffz.site.children.chat.chat_line.actions.actions.reply.hidden;
+                ffzenhancing_always_show_open_thread_button_handler_hidden = ffz.site.children.chat.chat_line.actions.actions.reply.hidden;
+                ffzenhancing_always_show_open_thread_button_handler_click = ffz.site.children.chat.chat_line.actions.actions.reply.click;
             } catch {}
 
             if (ffz.settings.get('chat.filtering.display-deleted') === 'DETAILED') {
@@ -445,6 +447,12 @@
         const el = ffz.resolve('site.chat.input').ChatInput.first;
         el.chatInputRef.setSelectionRange(start, end);
         el.autocompleteInputRef.componentRef.focus();
+    }
+
+
+    function focusChat() {
+        const txt = getChatInput();
+        setChatSelection(txt.length, txt.length);
     }
 
 
@@ -964,8 +972,15 @@
         try {
             if (ffzenhancing_always_show_open_thread_button) {
                 ffz.site.children.chat.chat_line.actions.actions.reply.hidden = () => false;
-            } else if (ffzenhancing_always_show_open_thread_button_handler !== undefined) {
-                ffz.site.children.chat.chat_line.actions.actions.reply.hidden = ffzenhancing_always_show_open_thread_button_handler;
+                ffz.site.children.chat.chat_line.actions.actions.reply.click = (...args) => {
+                    ffzenhancing_always_show_open_thread_button_handler_click(...args);
+                    setTimeout(() => {
+                        focusChat();
+                    });
+                };
+            } else if (ffzenhancing_always_show_open_thread_button_handler_hidden !== undefined) {
+                ffz.site.children.chat.chat_line.actions.actions.reply.hidden = ffzenhancing_always_show_open_thread_button_handler_hidden;
+                ffz.site.children.chat.chat_line.actions.actions.reply.click = ffzenhancing_always_show_open_thread_button_handler_click;
             }
             ffz.site.children.chat.chat_line.ChatLine.forceUpdate();
         } catch {}
@@ -1155,8 +1170,7 @@
                     }
                     if (check) {
                         setTimeout(() => {
-                            const txt = getChatInput();
-                            setChatSelection(txt.length, txt.length);
+                            focusChat();
                         });
                     }
                 }
