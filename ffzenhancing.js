@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.116';
+    let version = '6.117';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -551,8 +551,17 @@
                 if (autoQualityMode && ffz_is_player && def_quality) autoQualityMode = false;
                 if (!autoQualityMode && def_quality) {
                     const cur_quality = ffz.site.children.player.current.getQuality();
-                    if (def_quality.height != cur_quality.height || def_quality.framerate != cur_quality.framerate) {
-                        const new_quality = ffz.site.children.player.current.getQualities().find(q => q.height == def_quality.height && q.framerate <= def_quality.framerate || q.height < def_quality.height);
+                    if (def_quality.height != cur_quality.height || def_quality.framerate != cur_quality.framerate || cur_quality.group !== 'chunked') {
+                        const new_quality = ffz.site.children.player.current.getQualities()
+                            .filter(q => q.height == def_quality.height && q.framerate <= def_quality.framerate || q.height < def_quality.height)
+                            .sort((a, b) => {
+                                if (a.group === 'chunked') return -1;
+                                if (b.group === 'chunked') return 1;
+                                if (a.height > b.height) return -1;
+                                if (a.height < b.height) return 1;
+                                return 0;
+                            })
+                            .at(0);
                         if (new_quality && new_quality.group != cur_quality.group) {
                             ffz.site.children.player.current.setQuality(new_quality);
                         }
