@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.117';
+    let version = '6.118';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -463,7 +463,7 @@
             el.classList.contains('chat-line__message-mention') && !el.classList.contains('ffz-i-threads') ||
             el.parentNode.matches('span.chatter-name[role="button"]') ||
             el.parentNode.matches('span.ffz--giftee-name[role="button"]') ||
-            (el.classList.contains('tw-link') && (
+            ((el.classList.contains('tw-link') || el.parentNode.classList.contains('tw-link')) && (
                 el.parentNode.parentNode.classList.contains('chatter-list-item') || // chatter name in chatter list
                 el.parentNode.parentNode.parentNode.parentNode.classList.contains('viewer-card-header__display-name') // chatter name link in viewer card
             ))
