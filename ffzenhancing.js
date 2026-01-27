@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.118';
+    let version = '6.119';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -551,18 +551,18 @@
                 if (autoQualityMode && ffz_is_player && def_quality) autoQualityMode = false;
                 if (!autoQualityMode && def_quality) {
                     const cur_quality = ffz.site.children.player.current.getQuality();
-                    if (def_quality.height != cur_quality.height || def_quality.framerate != cur_quality.framerate || cur_quality.group !== 'chunked') {
+                    if (def_quality.height != cur_quality.height || def_quality.framerate != cur_quality.framerate || cur_quality.variantSource !== 'source') {
                         const new_quality = ffz.site.children.player.current.getQualities()
                             .filter(q => q.height == def_quality.height && q.framerate <= def_quality.framerate || q.height < def_quality.height)
                             .sort((a, b) => {
-                                if (a.group === 'chunked') return -1;
-                                if (b.group === 'chunked') return 1;
+                                if (a.variantSource === 'source') return -1;
+                                if (b.variantSource === 'source') return 1;
                                 if (a.height > b.height) return -1;
                                 if (a.height < b.height) return 1;
                                 return 0;
                             })
                             .at(0);
-                        if (new_quality && new_quality.group != cur_quality.group) {
+                        if (new_quality && new_quality.variantSource != cur_quality.variantSource) {
                             ffz.site.children.player.current.setQuality(new_quality);
                         }
                     }
