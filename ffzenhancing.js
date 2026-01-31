@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.119';
+    let version = '6.120';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -221,9 +221,9 @@
 
     function playerMount() {
         try {
-            if (ffz.site.children.player.current.core.onStateChanged === new_onStateChanged) return;
-            prev_player_onStateChanged = ffz.site.children.player.current.core.onStateChanged;
-            ffz.site.children.player.current.core.onStateChanged = new_onStateChanged;
+            if ((ffz.site.children.player.current.core || ffz.site.children.player.current.playerInstance.core).onStateChanged === new_onStateChanged) return;
+            prev_player_onStateChanged = (ffz.site.children.player.current.core || ffz.site.children.player.current.playerInstance.core).onStateChanged;
+            (ffz.site.children.player.current.core || ffz.site.children.player.current.playerInstance.core).onStateChanged = new_onStateChanged;
         } catch {}
     }
 
@@ -371,7 +371,7 @@
             if (!recently_clicked_playerQualityChange) return;
             recently_clicked_playerQualityChange = false;
             if (!isPlayerOrUserRoute()) return;
-            const autoQualityMode = ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.autoQualityMode;
+            const autoQualityMode = (ffz.site.children.player.current.core || ffz.site.children.player.current.playerInstance.core).state.autoQualityMode;
             if (autoQualityMode) {
                 ffz.settings.provider.delete('ffzenhancing.video-quality');
                 return;
@@ -424,7 +424,7 @@
         enableVisibilityHook();
         //ffz.emit('site.player:reset');
         try {
-            ffz.site.children.player.resetPlayer(ffz.site.children.player.current);
+            ffz.site.children.player.resetPlayer(ffz.site.children.player.Player.first);
             setTimeout(playerCompressorCheck, 1000);
         } catch {}
     }
@@ -506,7 +506,7 @@
 
     function isVodAndNotPaused() {
         try {
-            const video = ffz.site.children.player.current.core.mediaSinkManager.video;
+            const video = (ffz.site.children.player.current.core || ffz.site.children.player.current.playerInstance.core).mediaSinkManager.video;
             if (video) {
                 let broadcast_id;
                 broadcast_id = ffz.site.children.player.current.getSessionData()['BROADCAST-ID'];
@@ -523,7 +523,7 @@
 
     function getVideoLiveAndNotPaused() {
         try {
-            const video = ffz.site.children.player.current.core.mediaSinkManager.video;
+            const video = (ffz.site.children.player.current.core || ffz.site.children.player.current.playerInstance.core).mediaSinkManager.video;
             if (video) {
                 let broadcast_id;
                 if (!isPlayerOrUserRoute()) return false;
@@ -547,7 +547,7 @@
         try {
             if (!recently_clicked_playerQualityChange && document.visibilityState !== 'hidden' && isPlayerOrUserRoute()) {
                 const def_quality = ffz.settings.provider.get('ffzenhancing.video-quality');
-                let autoQualityMode = ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.autoQualityMode;
+                let autoQualityMode = (ffz.site.children.player.current.core || ffz.site.children.player.current.playerInstance.core).state.autoQualityMode;
                 if (autoQualityMode && ffz_is_player && def_quality) autoQualityMode = false;
                 if (!autoQualityMode && def_quality) {
                     const cur_quality = ffz.site.children.player.current.getQuality();
@@ -723,7 +723,8 @@
             try {
                 liveLatency = (ffz.site.children.player.current.core && ffz.site.children.player.current.core.state && ffz.site.children.player.current.core.state.liveLatency) ||
                     (ffz.site.children.player.current.stats && ffz.site.children.player.current.stats.broadcasterLatency) ||
-                    (ffz.site.children.player.current.core && ffz.site.children.player.current.core.stats && ffz.site.children.player.current.core.stats.broadcasterLatency);
+                    (ffz.site.children.player.current.core && ffz.site.children.player.current.core.stats && ffz.site.children.player.current.core.stats.broadcasterLatency) ||
+                    (ffz.site.children.player.current.playerInstance && ffz.site.children.player.current.playerInstance.core && ffz.site.children.player.current.playerInstance.core.state && ffz.site.children.player.current.playerInstance.core.state.liveLatency);
             } catch {}
             if (liveLatency !== undefined) {
                 if (ffzenhancing_reset_after_delay) {
@@ -741,7 +742,7 @@
                     const delay = isLowDelayEnabled ? ffzenhancing_keep_delay_low_delay_low_latency : ffzenhancing_keep_delay_low_delay;
                     if (liveLatency > delay) {
                         try {
-                            const buffer_time = ffz.site.children.player.current.core.state.bufferedPosition - ffz.site.children.player.current.core.state.position;
+                            const buffer_time = (ffz.site.children.player.current.core || ffz.site.children.player.current.playerInstance.core).state.bufferedPosition - (ffz.site.children.player.current.core || ffz.site.children.player.current.playerInstance.core).state.position;
                             if (!Number.isNaN(buffer_time)) {
                                 buffer_times.push(buffer_time);
                                 if (buffer_times.length < 20) {
