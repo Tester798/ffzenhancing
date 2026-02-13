@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.120';
+    let version = '6.121';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -790,6 +790,24 @@
 
 
     function processSettings() {
+        // temp fixes
+        try {
+            function checkShowPinnedSetting(val) {
+                if (val === undefined) val = ffz.settings.get('chat.bits.show-pinned');
+                if (!val) {
+                    addStyleToSite('ffzenhancing_hide_leaderboard', `
+                        .chat-room__content > .tw-transition[class^="ScTransitionBase-sc-"]:first-child {
+                            display: none;
+                        }
+                    `);
+                } else {
+                    removeStyleFromSite('ffzenhancing_hide_leaderboard');
+                }
+            }
+            ffz.settings.on('settings:changed:chat.bits.show-pinned', checkShowPinnedSetting);
+            checkShowPinnedSetting();
+        } catch {}
+
         let el;
         let appendEl;
 
