@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.122';
+    let version = '6.123';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -877,7 +877,7 @@
 
             let timeoutChatLoaded;
 
-            if (ffz.resolve('site.chat')) ffz.resolve('site.chat').PointsButton.ready(() => {
+            if (ffz.resolve('site.chat') && ffz.resolve('site.chat').PointsButton) ffz.resolve('site.chat').PointsButton.ready(() => {
                 clearTimeout(timeoutChatLoaded);
                 timeoutChatLoaded = setTimeout(checkLoadFinished, 1000);
             });
@@ -1709,8 +1709,8 @@
                 processSettings_schedule();
                 periodicCheckClaimBonus();
                 replaceFunctions();
-                if (this.site.children.chat) this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
-                if (this.site.children.chat) this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
+                if (this.site.children.chat && this.site.children.chat.ChatContainer) this.site.children.chat.ChatContainer.on('mount', processSettings_schedule, this);
+                if (this.site.children.chat && this.site.children.chat.ChatContainer) this.site.children.chat.ChatContainer.on('set', processSettings_schedule, this);
                 this.site.children.player.PlayerSource.on('update', playerMount, this);
                 theatreModeCheck();
             }
