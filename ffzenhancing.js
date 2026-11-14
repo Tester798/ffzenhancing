@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.123';
+    let version = '6.124';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -1190,12 +1190,8 @@
             document.body.addEventListener('click', e => {
                 if (ffzenhancing_focus_input_area_after_emote_select) {
                     let check = e.target.classList.contains('emote-picker__emote-link');
-                    if (!check) {
-                        try {
-                            let el = e.target.parentNode.parentNode;
-                            if (el) check = el.getAttribute('data-a-target') === 'chat-send-button';
-                        } catch {}
-                    }
+                    if (!check) check = findClosestBySelector(e.target, '[data-a-target="emote-picker-button"]', 1);
+                    if (!check) check = findClosestBySelector(e.target, '[data-a-target="chat-send-button"]', 3);
                     if (check) {
                         setTimeout(() => {
                             focusChat();
