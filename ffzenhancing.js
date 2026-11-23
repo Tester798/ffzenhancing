@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-    let version = '6.124';
+    let version = '6.125';
     let notify_icon = __ffzenhancing_base_url + 'notify.png';
     let notify_icon_original = document.querySelector('link[rel="icon"]') && document.querySelector('link[rel="icon"]').href;
     let ffz_is_player = window.location.hostname.startsWith('player');
@@ -430,23 +430,36 @@
     }
 
 
+    function getChatInputEl() {
+        for (const input of ffz.resolve('site.chat.input').ChatInput.instances) {
+            if (input.chatInputRef) {
+                return input;
+            }
+        }
+    }
+
+
     function getChatInput() {
-        const el = ffz.resolve('site.chat.input').ChatInput.first.autocompleteInputRef.componentRef;
+        const input = getChatInputEl();
+        if (!input) return;
+        const el = input.autocompleteInputRef && input.autocompleteInputRef.componentRef;
         return el.value !== undefined ? el.value : el.props.value;
     }
 
 
     function setChatInput(txt) {
-        const el = ffz.resolve('site.chat.input').ChatInput.first.autocompleteInputRef;
-        el.setValue(txt);
-        el.componentRef.focus();
+        const input = getChatInputEl();
+        if (!input) return;
+        input.autocompleteInputRef.setValue(txt);
+        input.autocompleteInputRef.componentRef.focus();
     }
 
 
     function setChatSelection(start, end) {
-        const el = ffz.resolve('site.chat.input').ChatInput.first;
-        el.chatInputRef.setSelectionRange(start, end);
-        el.autocompleteInputRef.componentRef.focus();
+        const input = getChatInputEl();
+        if (!input) return;
+        input.chatInputRef.setSelectionRange(start, end);
+        input.autocompleteInputRef.componentRef.focus();
     }
 
 
